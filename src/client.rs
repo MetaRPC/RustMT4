@@ -5,6 +5,8 @@ use tokio::sync::mpsc;
 pub struct MT4Client {
     host: String,
     port: u16,
+    pub api_key: Option<String>,
+    pub id: Option<String>,
     connected: bool,
 }
 
@@ -13,11 +15,28 @@ impl MT4Client {
         Self {
             host: host.into(),
             port,
+            api_key: std::env::var("MRPC_API_KEY").ok(),
+            id: None,
             connected: false,
         }
     }
 
-    pub async fn connect(&mut self, login: u64, _password: &str) -> Result<(), MT4Error> {
+    pub fn with_auth(mut self, api_key: impl Into<String>, id: impl Into<String>) -> Self {
+        self.api_key = Some(api_key.into());
+        self.id = Some(id.into());
+        self
+    }
+
+    pub async fn get_id(&mut self, user: u64, password: &str) -> Result<String, MT4Error> {
+        let id_str = format!("{:08x}-{:04x}-4{:03x}-8{:03x}-{:012x}", user, password.len(), user % 4096, (user / 4096) % 4096, user);
+        self.id = Some(id_str.clone());
+        Ok(id_str)
+    }
+
+    pub async fn connect(&mut self, login: u64, password: &str) -> Result<(), MT4Error> {
+        if self.id.is_none() {
+            let _ = self.get_id(login, password).await;
+        }
         self.connected = true;
         Ok(())
     }
@@ -46,7 +65,6 @@ impl MT4Client {
 
     pub async fn subscribe_quotes(&self, _symbols: Vec<String>) -> Result<mpsc::Receiver<Quote>, MT4Error> {
         let (tx, rx) = mpsc::channel(100);
-        // Spawns stream worker
         tokio::spawn(async move {
             let _ = tx;
         });
