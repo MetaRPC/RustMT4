@@ -2,22 +2,19 @@ use metarpc_mt4::{MT4Client, OrderRequest, OrderType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = MT4Client::new("mt4.mrpc.pro", 443);
+    let api_key = std::env::var("MRPC_API_KEY").unwrap_or_else(|_| "YOUR_API_KEY_HERE".to_string());
+    let mut client = MT4Client::with_api_key("mt4.mrpc.pro", 443, api_key);
 
-    println!("Step 1: Generating Account ID (GetId)...");
-    let account_id = client.get_id(100234, "demo_password").await?;
-    println!("Generated Account ID: {}", account_id);
-
-    println!("\nStep 2: Connecting to MT4 (mt4.mrpc.pro:443)...");
+    println!("Connecting to MT4 (mt4.mrpc.pro:443)...");
     client.connect(100234, "demo_password").await?;
-    println!("Connected successfully!");
+    println!("Connected successfully! Account ID: {}", client.id.as_deref().unwrap_or(""));
 
-    println!("\nStep 3: Querying Account Balance...");
+    println!("\nStep 1: Querying Account Balance...");
     let acc = client.get_account_info().await?;
     println!("Account: {} ({})", acc.login, acc.name);
     println!("Balance: {} {}", acc.balance, acc.currency);
 
-    println!("\nStep 4: Executing Market Order...");
+    println!("\nStep 2: Executing Market Order...");
     let req = OrderRequest {
         symbol: "EURUSD".to_string(),
         order_type: OrderType::Buy,
