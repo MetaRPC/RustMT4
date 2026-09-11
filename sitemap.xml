@@ -2,134 +2,134 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://metarpc.github.io/RustMT4/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/account/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/api/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/connection/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/getting-started/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/quotes/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/trading/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/API_Reference/MT4Account/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/API_Reference/MT4Service/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/API_Reference/MT4Sugar/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/ENUMS_USAGE_REFERENCE/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GETTING_STARTED/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GLOSSARY/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GRPC_STREAM_MANAGEMENT/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/MT4_For_Beginners/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/PROJECT_MAP/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/PROTOBUF_INSPECTOR_GUIDE/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/RETURN_CODES_REFERENCE/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/SYNC_VS_ASYNC/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/USERCODE_SANDBOX_GUIDE/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/Your_First_Project/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Strategies.Master.Overview/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/GridTradingOrchestrator.HOW_IT_WORKS/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/GridTradingOrchestrator/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/NewsStraddleOrchestrator.HOW_IT_WORKS/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/NewsStraddleOrchestrator/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/PendingBreakoutOrchestrator.HOW_IT_WORKS/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/PendingBreakoutOrchestrator/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/QuickHedgeOrchestrator.HOW_IT_WORKS/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/QuickHedgeOrchestrator/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/SimpleScalpingOrchestrator.HOW_IT_WORKS/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Orchestrators_EN/SimpleScalpingOrchestrator/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Presets/AdaptiveMarketModePreset/</loc>
-         <lastmod>2026-09-09</lastmod>
+         <lastmod>2026-09-11</lastmod>
     </url>
 </urlset>
