@@ -2,7 +2,9 @@ use metarpc_mt4::{MT4Client, OrderRequest, OrderType};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let api_key = std::env::var("MRPC_API_KEY").unwrap_or_else(|_| "YOUR_API_KEY_HERE".to_string());
+    let api_key = std::env::args().nth(1)
+        .or_else(|| std::env::var("MRPC_API_KEY").ok())
+        .unwrap_or_else(|| "TRIAL".to_string());
     let mut client = MT4Client::with_api_key("mt4.mrpc.pro", 443, api_key);
 
     println!("Connecting to MT4 (mt4.mrpc.pro:443)...");
