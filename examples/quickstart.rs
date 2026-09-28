@@ -31,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let res = client.order_send(req).await?;
     println!("Order placed! Ticket: #{} (Code: {})", res.ticket, res.error_code);
 
-    client.disconnect().await;
+    client.disconnect(true).await;
     println!("\nDisconnected.");
     Ok(())
 }
