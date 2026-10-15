@@ -645,14 +645,29 @@ pub struct AccountSummaryData {
     pub account_company_name: ::prost::alloc::string::String,
     #[prost(string, tag = "8")]
     pub account_currency: ::prost::alloc::string::String,
+    /// The server's current time at the moment of the call (broker server time). Unset while the account is not connected yet and no offset is known.
     #[prost(message, optional, tag = "9")]
     pub server_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// server_time in UTC (the same moment; server_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "15")]
+    pub server_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "10")]
     pub account_credit: f64,
     #[prost(bool, tag = "11")]
     pub is_investor: bool,
+    /// The broker server's offset from UTC in whole minutes (server_utc_offset_seconds / 60), a multiple of 15. Information,
+    /// never converted. 0 while the account is not connected yet.
     #[prost(int32, tag = "12")]
     pub utc_server_time_shift_minutes: i32,
+    /// The broker server's offset from UTC in seconds, positive = ahead of UTC: validated by the terminal (a multiple of 15 minutes).
+    /// Information, never converted; it is the offset behind every *_utc field of this API. ABSENT (has_server_utc_offset_seconds is false)
+    /// while it is not known yet: the account is not connected, or it is connected but the market is closed and no price quote has arrived
+    /// since the terminal started - MT4 learns the offset from a live quote. Absent never means UTC+0 (a UTC+0 broker sends 0 and has it
+    /// present). The *_utc fields stay unset until it is known. A connected terminal whose computer clock is provably wrong answers
+    /// SERVER_TIMEZONE_UNDETERMINED instead of data. The current offset is applied to every value, so history from before the broker's
+    /// last daylight-saving change is off by the daylight-saving step (usually 3600 s).
+    #[prost(int32, optional, tag = "14")]
+    pub server_utc_offset_seconds: ::core::option::Option<i32>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -690,8 +705,12 @@ pub struct OpenedOrderInfo {
     pub comment: ::prost::alloc::string::String,
     #[prost(double, tag = "2")]
     pub commision: f64,
+    /// Expiration of a pending order (broker server time). Unset when the order has no expiration.
     #[prost(message, optional, tag = "3")]
     pub expiration_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// expiration_time in UTC (the same moment; expiration_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "18")]
+    pub expiration_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "4")]
     pub lots: f64,
     #[prost(int32, tag = "5")]
@@ -716,8 +735,12 @@ pub struct OpenedOrderInfo {
     pub order_type: i32,
     #[prost(int32, tag = "15")]
     pub sort_index: i32,
+    /// Open time of the order (broker server time).
     #[prost(message, optional, tag = "16")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "19")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(int64, tag = "17")]
     pub account_login: i64,
 }
@@ -767,10 +790,16 @@ pub mod orders_history_reply {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OrdersHistoryData {
+    /// Rows of this page (all rows when no paging field is set), in the order of the request's sort mode; rows with an equal
+    /// sort key follow in ticket order, ascending in the ascending modes and descending in the descending modes.
     #[prost(message, repeated, tag = "1")]
     pub orders_info: ::prost::alloc::vec::Vec<HistoryOrderInfo>,
+    /// Number of orders in the whole selection, over all pages (at the moment of the call).
     #[prost(int32, tag = "2")]
     pub total_count: i32,
+    /// Cursor paging: pass back as page_token for the next page; empty when this was the last page (end of history for the range).
+    #[prost(string, tag = "3")]
+    pub next_page_token: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -779,8 +808,12 @@ pub struct HistoryOrderInfo {
     pub comment: ::prost::alloc::string::String,
     #[prost(double, tag = "2")]
     pub commision: f64,
+    /// Expiration of a pending order (broker server time). Unset when the order has no expiration.
     #[prost(message, optional, tag = "3")]
     pub expiration_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// expiration_time in UTC (the same moment; expiration_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "20")]
+    pub expiration_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "4")]
     pub lots: f64,
     #[prost(int32, tag = "5")]
@@ -805,10 +838,18 @@ pub struct HistoryOrderInfo {
     pub order_type: i32,
     #[prost(int32, tag = "15")]
     pub sort_index: i32,
+    /// Open time of the order (broker server time).
     #[prost(message, optional, tag = "16")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "21")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// Close time of the order (broker server time). Unset when the order is not closed.
     #[prost(message, optional, tag = "17")]
     pub close_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// close_time in UTC (the same moment; close_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "22")]
+    pub close_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "18")]
     pub close_price: f64,
     #[prost(int64, tag = "19")]
@@ -819,14 +860,32 @@ pub struct HistoryOrderInfo {
 pub struct OrdersHistoryRequest {
     #[prost(enumeration = "EnumOrderHistorySortType", tag = "1")]
     pub input_sort_mode: i32,
+    /// Start of the range of order OPEN times (inclusive) (broker server time). Unset = no lower bound.
     #[prost(message, optional, tag = "2")]
     pub input_from: ::core::option::Option<::prost_types::Timestamp>,
+    /// input_from in UTC: send either input_from or input_from_utc, not both.
+    #[prost(message, optional, tag = "8")]
+    pub input_from_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// End of the range of order OPEN times (inclusive) (broker server time). Unset = no upper bound.
     #[prost(message, optional, tag = "3")]
     pub input_to: ::core::option::Option<::prost_types::Timestamp>,
+    /// input_to in UTC: send either input_to or input_to_utc, not both.
+    #[prost(message, optional, tag = "9")]
+    pub input_to_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// Page-number paging (legacy): 1-based, needs itemsPerPage too. 0 = not used
     #[prost(int32, optional, tag = "4")]
     pub page_number: ::core::option::Option<i32>,
+    /// Page-number paging (legacy): rows per page, needs pageNumber too. 0 = not used
     #[prost(int32, optional, tag = "5")]
     pub items_per_page: ::core::option::Option<i32>,
+    /// Cursor paging (preferred, stable): the next_page_token of the previous page; empty for the first page. Send it back
+    /// with the same inputFrom, inputTo and inputSortMode. Cursor paging is on when page_token or page_size is set; it cannot be
+    /// combined with pageNumber/itemsPerPage (ORDERS_HISTORY_PAGING_INVALID).
+    #[prost(string, tag = "6")]
+    pub page_token: ::prost::alloc::string::String,
+    /// Cursor paging: orders per page, 1..5000 (more is clamped to 5000). 0 = 1000 when page_token is set.
+    #[prost(int32, tag = "7")]
+    pub page_size: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -876,8 +935,12 @@ pub struct SymbolParamsManyInfo {
     pub volume_high: i64,
     #[prost(int64, tag = "8")]
     pub volume_low: i64,
+    /// Time of the symbol's last quote, unix seconds (broker server time). 0 when there was none.
     #[prost(int64, tag = "9")]
     pub time: i64,
+    /// Time in UTC (the same moment; Time is in the broker server's time zone).
+    #[prost(int64, tag = "68")]
+    pub time_utc: i64,
     #[prost(int32, tag = "10")]
     pub digits: i32,
     #[prost(bool, tag = "11")]
@@ -889,10 +952,18 @@ pub struct SymbolParamsManyInfo {
     pub trade_calc_mode: i32,
     #[prost(enumeration = "SpEnumSymbolTradeMode", tag = "14")]
     pub trade_mode: i32,
+    /// Start of trading of the symbol (futures) (broker server time). Unset when the symbol has none.
     #[prost(message, optional, tag = "15")]
     pub start_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// StartTime in UTC (the same moment; StartTime is in the broker server's time zone).
+    #[prost(message, optional, tag = "69")]
+    pub start_time_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// Expiration of the symbol (futures) (broker server time). Unset when the symbol has none.
     #[prost(message, optional, tag = "16")]
     pub expiration_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// ExpirationTime in UTC (the same moment; ExpirationTime is in the broker server's time zone).
+    #[prost(message, optional, tag = "70")]
+    pub expiration_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(int32, tag = "17")]
     pub trade_stops_level: i32,
     #[prost(int32, tag = "18")]
@@ -999,6 +1070,13 @@ pub struct SymbolParamsManyInfo {
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct TickValueWithSizeRequest {
+    /// Symbols to read, by exact name (REST: repeated query parameter symbolNames).
+    /// Each named symbol is added to Market Watch when it is not there yet, then read.
+    /// At most 1000 names per request; a longer list is answered with an error.
+    /// EMPTY list = every symbol currently in Market Watch. It is NOT "all symbols of the
+    /// server": the terminal's Market Watch holds at most ~1000 symbols, so serving the
+    /// server's list (12,000+ at some brokers) would mean adding all of them to Market Watch
+    /// and changing the user's selection. Name the symbols you need.
     #[prost(string, repeated, tag = "1")]
     pub symbol_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
@@ -1551,6 +1629,8 @@ pub mod account_helper_client {
                 );
             self.inner.unary(req, path, codec).await
         }
+        /// Tick value as array. Name the symbols (symbolNames); with no names the reply covers the
+        /// symbols currently in Market Watch, never the whole server list.
         pub async fn tick_value_with_size(
             &mut self,
             request: impl tonic::IntoRequest<super::TickValueWithSizeRequest>,
@@ -1582,557 +1662,131 @@ pub mod account_helper_client {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaParamsRequest {
+pub struct AccountsListRequest {
+    /// Only accounts in this state, e.g. "Connected", "Syncing", "Unreachable", "WrongPassword", "Suspended"
+    /// (the vocabulary of ConnectState.state, compared without regard to case). Empty = every state.
     #[prost(string, tag = "1")]
-    pub ea_file_name: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaParamsReply {
-    #[prost(oneof = "get_ea_params_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<get_ea_params_reply::Response>,
-}
-/// Nested message and enum types in `GetEaParamsReply`.
-pub mod get_ea_params_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::GetEaParamsData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaParamsData {
-    #[prost(string, tag = "1")]
-    pub ea_name: ::prost::alloc::string::String,
-    #[prost(bool, tag = "2")]
-    pub ea_found: bool,
+    pub state: ::prost::alloc::string::String,
+    /// Only the account with this login number. 0 = every login.
+    #[prost(uint64, tag = "2")]
+    pub login: u64,
+    /// false (default): only accounts that are queued, starting or running, or that stopped on their own
+    /// (Unreachable, WrongPassword, Suspended, Expired) and can be started again. true: also accounts that
+    /// were stopped by the user, by an API call or by an administrator. Deleted accounts are never listed.
     #[prost(bool, tag = "3")]
-    pub ea_has_params: bool,
-    #[prost(message, repeated, tag = "4")]
-    pub parameters: ::prost::alloc::vec::Vec<EaParam>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EaParam {
-    #[prost(string, tag = "1")]
-    pub name: ::prost::alloc::string::String,
-    #[prost(enumeration = "EaParamType", tag = "2")]
-    pub r#type: i32,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct OpenTerminalChartWithEaRequest {
-    #[prost(string, tag = "1")]
-    pub symbol_name: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub ea_file_name: ::prost::alloc::string::String,
-    #[prost(enumeration = "EnumOpenTerminalChartWithEaChatPeriod", tag = "3")]
-    pub chart_period: i32,
-    #[prost(message, repeated, tag = "4")]
-    pub ea_parameters: ::prost::alloc::vec::Vec<OpenTerminalChartWithEaParameter>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct OpenTerminalChartWithEaParameter {
-    #[prost(int32, tag = "1")]
-    pub index: i32,
-    #[prost(enumeration = "EnumOpenTerminalChartWithEaParameterType", tag = "2")]
-    pub r#type: i32,
-    #[prost(int32, optional, tag = "3")]
-    pub int_param_value: ::core::option::Option<i32>,
-    #[prost(int64, optional, tag = "4")]
-    pub long_param_value: ::core::option::Option<i64>,
-    #[prost(bool, optional, tag = "5")]
-    pub bool_param_value: ::core::option::Option<bool>,
-    #[prost(string, optional, tag = "6")]
-    pub string_param_value: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(double, optional, tag = "7")]
-    pub double_param_value: ::core::option::Option<f64>,
-    #[prost(string, tag = "8")]
-    pub name: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct OpenTerminalChartWithEaReply {
-    #[prost(oneof = "open_terminal_chart_with_ea_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<open_terminal_chart_with_ea_reply::Response>,
-}
-/// Nested message and enum types in `OpenTerminalChartWithEaReply`.
-pub mod open_terminal_chart_with_ea_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::OpenTerminalChartWithEaData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct OpenTerminalChartWithEaData {
-    #[prost(int64, tag = "1")]
-    pub chart_id: i64,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct AttachEaRequest {
-    #[prost(string, tag = "1")]
-    pub session_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub ea_file_name: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub symbol_name: ::prost::alloc::string::String,
-    #[prost(enumeration = "EnumOpenTerminalChartWithEaChatPeriod", tag = "4")]
-    pub chart_period: i32,
-    #[prost(message, repeated, tag = "5")]
-    pub ea_parameters: ::prost::alloc::vec::Vec<OpenTerminalChartWithEaParameter>,
-    #[prost(bytes = "vec", optional, tag = "6")]
-    pub ea_file_content: ::core::option::Option<::prost::alloc::vec::Vec<u8>>,
-    #[prost(double, optional, tag = "7")]
-    pub max_cpu_percent: ::core::option::Option<f64>,
-    #[prost(int64, optional, tag = "8")]
-    pub max_ram_bytes: ::core::option::Option<i64>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct AttachEaReply {
-    #[prost(oneof = "attach_ea_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<attach_ea_reply::Response>,
-}
-/// Nested message and enum types in `AttachEaReply`.
-pub mod attach_ea_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::AttachEaData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct AttachEaData {
-    #[prost(string, tag = "1")]
-    pub ea_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "2")]
-    pub ea_terminal_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub parent_session_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub ea_name: ::prost::alloc::string::String,
+    pub include_stopped: bool,
+    /// Accounts per page, 1..1000. 0 = 200. A larger value is clamped, a negative one is rejected with
+    /// ACCOUNTS_PAGE_SIZE_INVALID.
+    #[prost(int32, tag = "4")]
+    pub page_size: i32,
+    /// The next_page_token of the previous page; empty for the first page. Must be sent with the same
+    /// state, login and include_stopped. Undecodable -> ACCOUNTS_PAGE_TOKEN_INVALID.
     #[prost(string, tag = "5")]
-    pub state: ::prost::alloc::string::String,
-    #[prost(int32, tag = "6")]
-    pub process_id: i32,
+    pub page_token: ::prost::alloc::string::String,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetRunningEasRequest {
-    #[prost(string, optional, tag = "1")]
-    pub session_id: ::core::option::Option<::prost::alloc::string::String>,
-    #[prost(string, optional, tag = "2")]
-    pub ea_id: ::core::option::Option<::prost::alloc::string::String>,
+pub struct AccountsListReply {
+    #[prost(oneof = "accounts_list_reply::Response", tags = "1, 2")]
+    pub response: ::core::option::Option<accounts_list_reply::Response>,
 }
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetRunningEasReply {
-    #[prost(oneof = "get_running_eas_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<get_running_eas_reply::Response>,
-}
-/// Nested message and enum types in `GetRunningEasReply`.
-pub mod get_running_eas_reply {
+/// Nested message and enum types in `AccountsListReply`.
+pub mod accounts_list_reply {
     #[allow(clippy::derive_partial_eq_without_eq)]
     #[derive(Clone, PartialEq, ::prost::Oneof)]
     pub enum Response {
         #[prost(message, tag = "1")]
-        Data(super::GetRunningEasData),
+        Data(super::AccountsListData),
         #[prost(message, tag = "2")]
         Error(super::Error),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetRunningEasData {
+pub struct AccountsListData {
     #[prost(message, repeated, tag = "1")]
-    pub eas: ::prost::alloc::vec::Vec<RunningEaInfo>,
+    pub accounts: ::prost::alloc::vec::Vec<AccountsListItem>,
+    /// Pass back as page_token for the next page; empty when this was the last page.
+    #[prost(string, tag = "2")]
+    pub next_page_token: ::prost::alloc::string::String,
+    /// Accounts matching the filters over all pages, at the moment of the call.
+    #[prost(int32, tag = "3")]
+    pub total_count: i32,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
-pub struct RunningEaInfo {
+pub struct AccountsListItem {
+    /// The terminal id to send as the "id" header of every other call, in the form the API itself
+    /// returns it: mt4_live_<32 hex>.
     #[prost(string, tag = "1")]
-    pub ea_id: ::prost::alloc::string::String,
+    pub terminal_id: ::prost::alloc::string::String,
+    /// The same identity as a hyphenated GUID. The API accepts either form in the "id" header.
     #[prost(string, tag = "2")]
-    pub ea_name: ::prost::alloc::string::String,
+    pub terminal_guid: ::prost::alloc::string::String,
+    /// "MT4".
     #[prost(string, tag = "3")]
-    pub parent_session_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "4")]
-    pub ea_terminal_id: ::prost::alloc::string::String,
-    #[prost(int32, tag = "5")]
-    pub process_id: i32,
+    pub platform: ::prost::alloc::string::String,
+    /// Account (login) number.
+    #[prost(uint64, tag = "4")]
+    pub login: u64,
+    /// Broker server name, as given to ConnectEx.
+    #[prost(string, tag = "5")]
+    pub server: ::prost::alloc::string::String,
+    /// Name given to the terminal when it was started; may be empty.
     #[prost(string, tag = "6")]
-    pub symbol: ::prost::alloc::string::String,
+    pub name: ::prost::alloc::string::String,
+    /// Current state of the account's terminal: Queued, Starting, Authorizing, Syncing, Connected,
+    /// WrongPassword, Unreachable, Suspended, Expired or Stopped (see ConnectState). It is the state the
+    /// cluster publishes for the terminal right now; a running terminal whose published state has not been
+    /// refreshed for over a minute reads Unreachable. Only when nothing is published is the last stored
+    /// state returned. "Unknown" appears for a record that has never had a state.
     #[prost(string, tag = "7")]
-    pub period: ::prost::alloc::string::String,
-    #[prost(string, tag = "8")]
     pub state: ::prost::alloc::string::String,
+    /// state == "Connected".
+    #[prost(bool, tag = "8")]
+    pub is_connected: bool,
+    /// When the account was first started (UTC; a platform time, not a broker time); a restart does not change it. Unset
+    /// when the record has no start time.
     #[prost(message, optional, tag = "9")]
-    pub started_at: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(double, tag = "10")]
-    pub ea_cpu_percent: f64,
-    #[prost(double, tag = "11")]
-    pub ref_cpu_percent: f64,
-    #[prost(double, tag = "12")]
-    pub cpu_ratio: f64,
-    #[prost(int64, tag = "13")]
-    pub ea_ram_bytes: i64,
-    #[prost(int64, tag = "14")]
-    pub ref_ram_bytes: i64,
-    #[prost(double, tag = "15")]
-    pub ram_ratio: f64,
-    #[prost(double, tag = "16")]
-    pub resource_multiplier: f64,
-    #[prost(double, tag = "17")]
-    pub metered_hours: f64,
-    #[prost(double, tag = "18")]
-    pub charged_amount: f64,
-    #[prost(message, optional, tag = "19")]
-    pub stopped_at: ::core::option::Option<::prost_types::Timestamp>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaLogsRequest {
-    #[prost(string, tag = "1")]
-    pub ea_id: ::prost::alloc::string::String,
-    #[prost(string, optional, tag = "2")]
-    pub log_type: ::core::option::Option<::prost::alloc::string::String>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaLogsReply {
-    #[prost(oneof = "get_ea_logs_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<get_ea_logs_reply::Response>,
-}
-/// Nested message and enum types in `GetEaLogsReply`.
-pub mod get_ea_logs_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::GetEaLogsData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct GetEaLogsData {
-    #[prost(message, repeated, tag = "1")]
-    pub rows: ::prost::alloc::vec::Vec<EaLogRow>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct EaLogRow {
-    #[prost(message, optional, tag = "1")]
-    pub time: ::core::option::Option<::prost_types::Timestamp>,
-    #[prost(string, tag = "2")]
-    pub source: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub message: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StopEaRequest {
-    #[prost(string, tag = "1")]
-    pub ea_id: ::prost::alloc::string::String,
-    #[prost(string, optional, tag = "2")]
-    pub reason: ::core::option::Option<::prost::alloc::string::String>,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StopEaReply {
-    #[prost(oneof = "stop_ea_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<stop_ea_reply::Response>,
-}
-/// Nested message and enum types in `StopEaReply`.
-pub mod stop_ea_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::StopEaData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StopEaData {
-    #[prost(bool, tag = "1")]
-    pub success: bool,
-    #[prost(string, tag = "2")]
-    pub ea_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub message: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StartEaRequest {
-    #[prost(string, tag = "1")]
-    pub ea_id: ::prost::alloc::string::String,
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StartEaReply {
-    #[prost(oneof = "start_ea_reply::Response", tags = "1, 2")]
-    pub response: ::core::option::Option<start_ea_reply::Response>,
-}
-/// Nested message and enum types in `StartEaReply`.
-pub mod start_ea_reply {
-    #[allow(clippy::derive_partial_eq_without_eq)]
-    #[derive(Clone, PartialEq, ::prost::Oneof)]
-    pub enum Response {
-        #[prost(message, tag = "1")]
-        Data(super::StartEaData),
-        #[prost(message, tag = "2")]
-        Error(super::Error),
-    }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct StartEaData {
-    #[prost(bool, tag = "1")]
-    pub success: bool,
-    #[prost(string, tag = "2")]
-    pub ea_id: ::prost::alloc::string::String,
-    #[prost(string, tag = "3")]
-    pub message: ::prost::alloc::string::String,
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum EaParamType {
-    Undefined = 0,
-    String = 1,
-    Integer = 2,
-    Double = 3,
-    Boolean = 4,
-}
-impl EaParamType {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            EaParamType::Undefined => "EA_PARAM_TYPE_UNDEFINED",
-            EaParamType::String => "EA_PARAM_TYPE_STRING",
-            EaParamType::Integer => "EA_PARAM_TYPE_INTEGER",
-            EaParamType::Double => "EA_PARAM_TYPE_DOUBLE",
-            EaParamType::Boolean => "EA_PARAM_TYPE_BOOLEAN",
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "EA_PARAM_TYPE_UNDEFINED" => Some(Self::Undefined),
-            "EA_PARAM_TYPE_STRING" => Some(Self::String),
-            "EA_PARAM_TYPE_INTEGER" => Some(Self::Integer),
-            "EA_PARAM_TYPE_DOUBLE" => Some(Self::Double),
-            "EA_PARAM_TYPE_BOOLEAN" => Some(Self::Boolean),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum EnumOpenTerminalChartWithEaParameterType {
-    MrpcEaParamInt = 0,
-    MrpcEaParamLong = 1,
-    MrpcEaParamBool = 2,
-    MrpcEaParamString = 3,
-    MrpcEaParamDouble = 4,
-}
-impl EnumOpenTerminalChartWithEaParameterType {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            EnumOpenTerminalChartWithEaParameterType::MrpcEaParamInt => {
-                "MRPC_EA_PARAM_INT"
-            }
-            EnumOpenTerminalChartWithEaParameterType::MrpcEaParamLong => {
-                "MRPC_EA_PARAM_LONG"
-            }
-            EnumOpenTerminalChartWithEaParameterType::MrpcEaParamBool => {
-                "MRPC_EA_PARAM_BOOL"
-            }
-            EnumOpenTerminalChartWithEaParameterType::MrpcEaParamString => {
-                "MRPC_EA_PARAM_STRING"
-            }
-            EnumOpenTerminalChartWithEaParameterType::MrpcEaParamDouble => {
-                "MRPC_EA_PARAM_DOUBLE"
-            }
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "MRPC_EA_PARAM_INT" => Some(Self::MrpcEaParamInt),
-            "MRPC_EA_PARAM_LONG" => Some(Self::MrpcEaParamLong),
-            "MRPC_EA_PARAM_BOOL" => Some(Self::MrpcEaParamBool),
-            "MRPC_EA_PARAM_STRING" => Some(Self::MrpcEaParamString),
-            "MRPC_EA_PARAM_DOUBLE" => Some(Self::MrpcEaParamDouble),
-            _ => None,
-        }
-    }
-}
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-#[repr(i32)]
-pub enum EnumOpenTerminalChartWithEaChatPeriod {
-    MrpcEaChartPeriodCurrent = 0,
-    MrpcEaChartPeriodM1 = 1,
-    MrpcEaChartPeriodM2 = 2,
-    MrpcEaChartPeriodM3 = 3,
-    MrpcEaChartPeriodM4 = 4,
-    MrpcEaChartPeriodM5 = 5,
-    MrpcEaChartPeriodM6 = 6,
-    MrpcEaChartPeriodM10 = 7,
-    MrpcEaChartPeriodM12 = 8,
-    MrpcEaChartPeriodM15 = 9,
-    MrpcEaChartPeriodM20 = 10,
-    MrpcEaChartPeriodM30 = 11,
-    MrpcEaChartPeriodH1 = 12,
-    MrpcEaChartPeriodH2 = 13,
-    MrpcEaChartPeriodH3 = 14,
-    MrpcEaChartPeriodH4 = 15,
-    MrpcEaChartPeriodH6 = 16,
-    MrpcEaChartPeriodH8 = 17,
-    MrpcEaChartPeriodH12 = 18,
-    MrpcEaChartPeriodD1 = 19,
-    MrpcEaChartPeriodW1 = 20,
-    MrpcEaChartPeriodMn1 = 21,
-}
-impl EnumOpenTerminalChartWithEaChatPeriod {
-    /// String value of the enum field names used in the ProtoBuf definition.
-    ///
-    /// The values are not transformed in any way and thus are considered stable
-    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-    pub fn as_str_name(&self) -> &'static str {
-        match self {
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodCurrent => {
-                "MRPC_EA_CHART_PERIOD_CURRENT"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM1 => {
-                "MRPC_EA_CHART_PERIOD_M1"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM2 => {
-                "MRPC_EA_CHART_PERIOD_M2"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM3 => {
-                "MRPC_EA_CHART_PERIOD_M3"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM4 => {
-                "MRPC_EA_CHART_PERIOD_M4"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM5 => {
-                "MRPC_EA_CHART_PERIOD_M5"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM6 => {
-                "MRPC_EA_CHART_PERIOD_M6"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM10 => {
-                "MRPC_EA_CHART_PERIOD_M10"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM12 => {
-                "MRPC_EA_CHART_PERIOD_M12"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM15 => {
-                "MRPC_EA_CHART_PERIOD_M15"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM20 => {
-                "MRPC_EA_CHART_PERIOD_M20"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodM30 => {
-                "MRPC_EA_CHART_PERIOD_M30"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH1 => {
-                "MRPC_EA_CHART_PERIOD_H1"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH2 => {
-                "MRPC_EA_CHART_PERIOD_H2"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH3 => {
-                "MRPC_EA_CHART_PERIOD_H3"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH4 => {
-                "MRPC_EA_CHART_PERIOD_H4"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH6 => {
-                "MRPC_EA_CHART_PERIOD_H6"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH8 => {
-                "MRPC_EA_CHART_PERIOD_H8"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodH12 => {
-                "MRPC_EA_CHART_PERIOD_H12"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodD1 => {
-                "MRPC_EA_CHART_PERIOD_D1"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodW1 => {
-                "MRPC_EA_CHART_PERIOD_W1"
-            }
-            EnumOpenTerminalChartWithEaChatPeriod::MrpcEaChartPeriodMn1 => {
-                "MRPC_EA_CHART_PERIOD_MN1"
-            }
-        }
-    }
-    /// Creates an enum from field names used in the ProtoBuf definition.
-    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-        match value {
-            "MRPC_EA_CHART_PERIOD_CURRENT" => Some(Self::MrpcEaChartPeriodCurrent),
-            "MRPC_EA_CHART_PERIOD_M1" => Some(Self::MrpcEaChartPeriodM1),
-            "MRPC_EA_CHART_PERIOD_M2" => Some(Self::MrpcEaChartPeriodM2),
-            "MRPC_EA_CHART_PERIOD_M3" => Some(Self::MrpcEaChartPeriodM3),
-            "MRPC_EA_CHART_PERIOD_M4" => Some(Self::MrpcEaChartPeriodM4),
-            "MRPC_EA_CHART_PERIOD_M5" => Some(Self::MrpcEaChartPeriodM5),
-            "MRPC_EA_CHART_PERIOD_M6" => Some(Self::MrpcEaChartPeriodM6),
-            "MRPC_EA_CHART_PERIOD_M10" => Some(Self::MrpcEaChartPeriodM10),
-            "MRPC_EA_CHART_PERIOD_M12" => Some(Self::MrpcEaChartPeriodM12),
-            "MRPC_EA_CHART_PERIOD_M15" => Some(Self::MrpcEaChartPeriodM15),
-            "MRPC_EA_CHART_PERIOD_M20" => Some(Self::MrpcEaChartPeriodM20),
-            "MRPC_EA_CHART_PERIOD_M30" => Some(Self::MrpcEaChartPeriodM30),
-            "MRPC_EA_CHART_PERIOD_H1" => Some(Self::MrpcEaChartPeriodH1),
-            "MRPC_EA_CHART_PERIOD_H2" => Some(Self::MrpcEaChartPeriodH2),
-            "MRPC_EA_CHART_PERIOD_H3" => Some(Self::MrpcEaChartPeriodH3),
-            "MRPC_EA_CHART_PERIOD_H4" => Some(Self::MrpcEaChartPeriodH4),
-            "MRPC_EA_CHART_PERIOD_H6" => Some(Self::MrpcEaChartPeriodH6),
-            "MRPC_EA_CHART_PERIOD_H8" => Some(Self::MrpcEaChartPeriodH8),
-            "MRPC_EA_CHART_PERIOD_H12" => Some(Self::MrpcEaChartPeriodH12),
-            "MRPC_EA_CHART_PERIOD_D1" => Some(Self::MrpcEaChartPeriodD1),
-            "MRPC_EA_CHART_PERIOD_W1" => Some(Self::MrpcEaChartPeriodW1),
-            "MRPC_EA_CHART_PERIOD_MN1" => Some(Self::MrpcEaChartPeriodMn1),
-            _ => None,
-        }
-    }
+    pub started_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// When it last stopped (UTC; a platform time, not a broker time). Unset while it is running.
+    #[prost(message, optional, tag = "10")]
+    pub stopped_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// Why it stopped or is not running (for example "ByApi", "InvalidLogin", "Unreachable:StartupTimeout");
+    /// may be empty. Empty while the account is queued, starting or running.
+    #[prost(string, tag = "11")]
+    pub stop_reason: ::prost::alloc::string::String,
+    /// The last error recorded for the account, when its state is a failure; may be empty.
+    #[prost(string, tag = "12")]
+    pub error_message: ::prost::alloc::string::String,
+    /// When the terminal is set to expire (UTC; a platform time, not a broker time). Unset when no expiry is recorded for the
+    /// account, which is the case for every account today.
+    #[prost(message, optional, tag = "13")]
+    pub expires_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 /// Generated client implementations.
-pub mod charts_client {
+pub mod accounts_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    /// ============================================================================
+    /// Accounts: the MT4 accounts (terminals) that belong to your API key.
+    ///
+    /// This is the call to make when you need the terminal ids of accounts that already exist - started
+    /// from the dashboard or by an earlier ConnectEx - so that you can send them as the "id" header of
+    /// every other call. Unlike the terminal calls it needs NO "id" header: it is answered from the
+    /// platform's records of the API key sent in the "APIKey" header, and it never starts, wakes or bills
+    /// a terminal.
+    ///
+    /// Accounts are listed newest first (by started_utc, then terminal_id) and returned by page. Only
+    /// accounts of THIS platform's endpoint are listed (mt5.mrpc.pro lists MT5 accounts, mt4.mrpc.pro lists
+    /// MT4 accounts).
+    /// ============================================================================
     #[derive(Debug, Clone)]
-    pub struct ChartsClient<T> {
+    pub struct AccountsClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ChartsClient<tonic::transport::Channel> {
+    impl AccountsClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -2143,7 +1797,7 @@ pub mod charts_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ChartsClient<T>
+    impl<T> AccountsClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -2161,7 +1815,7 @@ pub mod charts_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> ChartsClient<InterceptedService<T, F>>
+        ) -> AccountsClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -2175,7 +1829,7 @@ pub mod charts_client {
                 http::Request<tonic::body::BoxBody>,
             >>::Error: Into<StdError> + Send + Sync,
         {
-            ChartsClient::new(InterceptedService::new(inner, interceptor))
+            AccountsClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -2208,11 +1862,19 @@ pub mod charts_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        pub async fn get_ea_params(
+        /// Lists the accounts of the API key sent in the APIKey header, one page per call. Pass the
+        /// next_page_token of a page back as page_token to continue; an empty next_page_token means that was
+        /// the last page.
+        /// [DefaultValues]
+        /// {
+        ///   "includeStopped": "false",
+        ///   "pageSize": "200"
+        /// }
+        pub async fn list(
             &mut self,
-            request: impl tonic::IntoRequest<super::GetEaParamsRequest>,
+            request: impl tonic::IntoRequest<super::AccountsListRequest>,
         ) -> std::result::Result<
-            tonic::Response<super::GetEaParamsReply>,
+            tonic::Response<super::AccountsListReply>,
             tonic::Status,
         > {
             self.inner
@@ -2226,151 +1888,11 @@ pub mod charts_client {
                 })?;
             let codec = tonic::codec::ProstCodec::default();
             let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/GetEaParams",
+                "/mt4_term_api.Accounts/List",
             );
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "GetEaParams"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn open_terminal_chart_with_ea(
-            &mut self,
-            request: impl tonic::IntoRequest<super::OpenTerminalChartWithEaRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::OpenTerminalChartWithEaReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/OpenTerminalChartWithEa",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(
-                    GrpcMethod::new("mt4_term_api.Charts", "OpenTerminalChartWithEa"),
-                );
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn attach_ea(
-            &mut self,
-            request: impl tonic::IntoRequest<super::AttachEaRequest>,
-        ) -> std::result::Result<tonic::Response<super::AttachEaReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/AttachEa",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "AttachEa"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn get_running_eas(
-            &mut self,
-            request: impl tonic::IntoRequest<super::GetRunningEasRequest>,
-        ) -> std::result::Result<
-            tonic::Response<super::GetRunningEasReply>,
-            tonic::Status,
-        > {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/GetRunningEas",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "GetRunningEas"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn get_ea_logs(
-            &mut self,
-            request: impl tonic::IntoRequest<super::GetEaLogsRequest>,
-        ) -> std::result::Result<tonic::Response<super::GetEaLogsReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/GetEaLogs",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "GetEaLogs"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn stop_ea(
-            &mut self,
-            request: impl tonic::IntoRequest<super::StopEaRequest>,
-        ) -> std::result::Result<tonic::Response<super::StopEaReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/StopEa",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "StopEa"));
-            self.inner.unary(req, path, codec).await
-        }
-        pub async fn start_ea(
-            &mut self,
-            request: impl tonic::IntoRequest<super::StartEaRequest>,
-        ) -> std::result::Result<tonic::Response<super::StartEaReply>, tonic::Status> {
-            self.inner
-                .ready()
-                .await
-                .map_err(|e| {
-                    tonic::Status::new(
-                        tonic::Code::Unknown,
-                        format!("Service was not ready: {}", e.into()),
-                    )
-                })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static(
-                "/mt4_term_api.Charts/StartEa",
-            );
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("mt4_term_api.Charts", "StartEa"));
+                .insert(GrpcMethod::new("mt4_term_api.Accounts", "List"));
             self.inner.unary(req, path, codec).await
         }
     }
@@ -4455,6 +3977,9 @@ pub struct HealthCheckReply {
     pub connected: bool,
     #[prost(int64, tag = "2")]
     pub server_time_msc: i64,
+    /// serverTimeMsc in UTC (the same moment; serverTimeMsc is in the broker server's time zone).
+    #[prost(int64, tag = "3")]
+    pub server_time_msc_utc: i64,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -4666,6 +4191,8 @@ pub enum ChartTemplateMode {
     OnOpenedOrdersTickets = 1,
     OnOrderProfit = 2,
     OnSymbolInfoTick = 3,
+    /// every trade stream of the terminal on one chart (mt4-chart-events)
+    Events = 4,
 }
 impl ChartTemplateMode {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -4678,6 +4205,7 @@ impl ChartTemplateMode {
             ChartTemplateMode::OnOpenedOrdersTickets => "ON_OPENED_ORDERS_TICKETS",
             ChartTemplateMode::OnOrderProfit => "ON_ORDER_PROFIT",
             ChartTemplateMode::OnSymbolInfoTick => "ON_SYMBOL_INFO_TICK",
+            ChartTemplateMode::Events => "EVENTS",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -4687,6 +4215,7 @@ impl ChartTemplateMode {
             "ON_OPENED_ORDERS_TICKETS" => Some(Self::OnOpenedOrdersTickets),
             "ON_ORDER_PROFIT" => Some(Self::OnOrderProfit),
             "ON_SYMBOL_INFO_TICK" => Some(Self::OnSymbolInfoTick),
+            "EVENTS" => Some(Self::Events),
             _ => None,
         }
     }
@@ -4945,8 +4474,12 @@ pub struct QuoteData {
     pub bid: f64,
     #[prost(double, tag = "3")]
     pub ask: f64,
+    /// Time of the quote (broker server time). Unset when the terminal has no quote time.
     #[prost(message, optional, tag = "4")]
     pub date_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// date_time in UTC (the same moment; date_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "7")]
+    pub date_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "5")]
     pub high: f64,
     #[prost(double, tag = "6")]
@@ -5022,10 +4555,18 @@ pub struct QuoteHistoryRequest {
     pub symbol: ::prost::alloc::string::String,
     #[prost(enumeration = "EnumQuoteHistoryTimeframe", tag = "2")]
     pub timeframe: i32,
+    /// Start of the range of bars (broker server time).
     #[prost(message, optional, tag = "3")]
     pub from_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// fromTime in UTC: send either fromTime or fromTimeUtc, not both.
+    #[prost(message, optional, tag = "5")]
+    pub from_time_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// End of the range of bars (broker server time).
     #[prost(message, optional, tag = "4")]
     pub to_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// toTime in UTC: send either toTime or toTimeUtc, not both.
+    #[prost(message, optional, tag = "6")]
+    pub to_time_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -5057,8 +4598,12 @@ pub struct HistoryQuote {
     pub symbol: ::prost::alloc::string::String,
     #[prost(int32, tag = "2")]
     pub index: i32,
+    /// Open time of the bar (broker server time).
     #[prost(message, optional, tag = "3")]
     pub time: ::core::option::Option<::prost_types::Timestamp>,
+    /// time in UTC (the same moment; time is in the broker server's time zone).
+    #[prost(message, optional, tag = "11")]
+    pub time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "4")]
     pub open: f64,
     #[prost(double, tag = "5")]
@@ -5318,6 +4863,7 @@ pub mod market_info_client {
                 .insert(GrpcMethod::new("mt4_term_api.MarketInfo", "Symbols"));
             self.inner.unary(req, path, codec).await
         }
+        /// DEPRECATED: use QuoteHistory.Bars (mt4-term-api-quote-history.proto): paged, bounded, oldest first.
         pub async fn quote_history(
             &mut self,
             request: impl tonic::IntoRequest<super::QuoteHistoryRequest>,
@@ -5374,6 +4920,483 @@ pub mod market_info_client {
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QuoteHistoryBarsRequest {
+    /// Required. Broker symbol name, e.g. "EURUSD".
+    #[prost(string, tag = "1")]
+    pub symbol: ::prost::alloc::string::String,
+    /// Required.
+    #[prost(enumeration = "QuoteHistoryTimeframe", tag = "2")]
+    pub timeframe: i32,
+    /// Required. Unix seconds (UTC) of the oldest bar wanted, inclusive. A time
+    /// before the broker's first bar is clamped to that first bar.
+    #[prost(int64, tag = "3")]
+    pub from_time: i64,
+    /// from_time in UTC: send either from_time or from_time_utc, not both.
+    #[prost(int64, tag = "7")]
+    pub from_time_utc: i64,
+    /// Unix seconds (UTC) of the newest bar wanted, inclusive. 0 = now.
+    #[prost(int64, tag = "4")]
+    pub to_time: i64,
+    /// to_time in UTC: send either to_time or to_time_utc, not both.
+    #[prost(int64, tag = "8")]
+    pub to_time_utc: i64,
+    /// Bars per page, 1..5000. 0 = 1000.
+    #[prost(int32, tag = "5")]
+    pub page_size: i32,
+    /// The next_page_token of the previous page, to continue; empty for the
+    /// first page. Must be used with the same symbol, timeframe and range.
+    #[prost(string, tag = "6")]
+    pub page_token: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QuoteHistoryBarsReply {
+    #[prost(oneof = "quote_history_bars_reply::Response", tags = "1, 2")]
+    pub response: ::core::option::Option<quote_history_bars_reply::Response>,
+}
+/// Nested message and enum types in `QuoteHistoryBarsReply`.
+pub mod quote_history_bars_reply {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Response {
+        #[prost(message, tag = "1")]
+        Data(super::QuoteHistoryBarsData),
+        #[prost(message, tag = "2")]
+        Error(super::Error),
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QuoteHistoryBarsData {
+    #[prost(string, tag = "1")]
+    pub symbol: ::prost::alloc::string::String,
+    #[prost(enumeration = "QuoteHistoryTimeframe", tag = "2")]
+    pub timeframe: i32,
+    /// Oldest first. Empty when the range holds no bars.
+    #[prost(message, repeated, tag = "3")]
+    pub bars: ::prost::alloc::vec::Vec<QuoteHistoryBar>,
+    /// Pass back as page_token for the next page; empty when this was the last.
+    #[prost(string, tag = "4")]
+    pub next_page_token: ::prost::alloc::string::String,
+    /// Unix seconds of the oldest bar the terminal has for this symbol and
+    /// timeframe (0 when unknown).
+    #[prost(int64, tag = "5")]
+    pub server_first_time: i64,
+    /// server_first_time in UTC (the same moment; server_first_time is in the broker server's time zone).
+    #[prost(int64, tag = "6")]
+    pub server_first_time_utc: i64,
+}
+/// One bar (candle), named as MQL4 names the fields of MqlRates.
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct QuoteHistoryBar {
+    /// Unix seconds (UTC), bar open
+    #[prost(int64, tag = "1")]
+    pub time: i64,
+    /// time in UTC (the same moment; time is in the broker server's time zone).
+    #[prost(int64, tag = "9")]
+    pub time_utc: i64,
+    #[prost(double, tag = "2")]
+    pub open: f64,
+    #[prost(double, tag = "3")]
+    pub high: f64,
+    #[prost(double, tag = "4")]
+    pub low: f64,
+    #[prost(double, tag = "5")]
+    pub close: f64,
+    /// ticks in the bar
+    #[prost(int64, tag = "6")]
+    pub tick_volume: i64,
+    /// points
+    #[prost(int32, tag = "7")]
+    pub spread: i32,
+    /// 0 on MT4
+    #[prost(int64, tag = "8")]
+    pub real_volume: i64,
+}
+/// Timeframe of a bar. The value is the bar length in MINUTES - the same
+/// numbers MQL4's ENUM_TIMEFRAMES uses. These are the nine periods MT4 has.
+/// The names carry the prefix QHB_ (not QH_ as on MT5) because the older MarketInfo.QuoteHistory of MT4 already owns QH_PERIOD_M1..MN1
+/// (ENUM_QUOTE_HISTORY_TIMEFRAME, other numbers) and enum value names are shared by the whole package.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum QuoteHistoryTimeframe {
+    QhbPeriodUnspecified = 0,
+    QhbPeriodM1 = 1,
+    QhbPeriodM5 = 5,
+    QhbPeriodM15 = 15,
+    QhbPeriodM30 = 30,
+    QhbPeriodH1 = 60,
+    QhbPeriodH4 = 240,
+    QhbPeriodD1 = 1440,
+    QhbPeriodW1 = 10080,
+    QhbPeriodMn1 = 43200,
+}
+impl QuoteHistoryTimeframe {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            QuoteHistoryTimeframe::QhbPeriodUnspecified => "QHB_PERIOD_UNSPECIFIED",
+            QuoteHistoryTimeframe::QhbPeriodM1 => "QHB_PERIOD_M1",
+            QuoteHistoryTimeframe::QhbPeriodM5 => "QHB_PERIOD_M5",
+            QuoteHistoryTimeframe::QhbPeriodM15 => "QHB_PERIOD_M15",
+            QuoteHistoryTimeframe::QhbPeriodM30 => "QHB_PERIOD_M30",
+            QuoteHistoryTimeframe::QhbPeriodH1 => "QHB_PERIOD_H1",
+            QuoteHistoryTimeframe::QhbPeriodH4 => "QHB_PERIOD_H4",
+            QuoteHistoryTimeframe::QhbPeriodD1 => "QHB_PERIOD_D1",
+            QuoteHistoryTimeframe::QhbPeriodW1 => "QHB_PERIOD_W1",
+            QuoteHistoryTimeframe::QhbPeriodMn1 => "QHB_PERIOD_MN1",
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "QHB_PERIOD_UNSPECIFIED" => Some(Self::QhbPeriodUnspecified),
+            "QHB_PERIOD_M1" => Some(Self::QhbPeriodM1),
+            "QHB_PERIOD_M5" => Some(Self::QhbPeriodM5),
+            "QHB_PERIOD_M15" => Some(Self::QhbPeriodM15),
+            "QHB_PERIOD_M30" => Some(Self::QhbPeriodM30),
+            "QHB_PERIOD_H1" => Some(Self::QhbPeriodH1),
+            "QHB_PERIOD_H4" => Some(Self::QhbPeriodH4),
+            "QHB_PERIOD_D1" => Some(Self::QhbPeriodD1),
+            "QHB_PERIOD_W1" => Some(Self::QhbPeriodW1),
+            "QHB_PERIOD_MN1" => Some(Self::QhbPeriodMn1),
+            _ => None,
+        }
+    }
+}
+/// Generated client implementations.
+pub mod quote_history_client {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    /// ============================================================================
+    /// Quote history: the bars a chart is drawn from, for one symbol - returned by
+    /// PAGE, oldest first. MetaTrader 4 keeps no tick history, so there is no
+    /// Ticks call here; the MT5 API has one.
+    ///
+    /// Bars walks a time range forward. A page carries at most page_size bars and,
+    /// when the range holds more, a next_page_token; passing that token back (same
+    /// symbol, timeframe and range) returns the next page. An empty next_page_token
+    /// means the range is exhausted. Tokens are opaque: a client stores and returns
+    /// them, nothing else.
+    ///
+    /// History lives in the terminal and is fetched from the broker on demand. The
+    /// first request for a symbol or a period the terminal has not loaded yet can
+    /// take a few seconds, and when the broker has not delivered it within that
+    /// time the call answers with an error whose error_code is
+    /// QUOTE_HISTORY_NOT_READY - ask again a moment later.
+    ///
+    /// Every call needs the terminal id header ("id"), like every other call.
+    /// ============================================================================
+    #[derive(Debug, Clone)]
+    pub struct QuoteHistoryClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl QuoteHistoryClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> QuoteHistoryClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> QuoteHistoryClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+            >>::Error: Into<StdError> + Send + Sync,
+        {
+            QuoteHistoryClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        /// OHLC bars (candles) of one symbol and timeframe, oldest first, by page.
+        pub async fn bars(
+            &mut self,
+            request: impl tonic::IntoRequest<super::QuoteHistoryBarsRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::QuoteHistoryBarsReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.QuoteHistory/Bars",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("mt4_term_api.QuoteHistory", "Bars"));
+            self.inner.unary(req, path, codec).await
+        }
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ServerTimezoneRequest {}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ServerTimezoneReply {
+    #[prost(oneof = "server_timezone_reply::Response", tags = "1, 2")]
+    pub response: ::core::option::Option<server_timezone_reply::Response>,
+}
+/// Nested message and enum types in `ServerTimezoneReply`.
+pub mod server_timezone_reply {
+    #[allow(clippy::derive_partial_eq_without_eq)]
+    #[derive(Clone, PartialEq, ::prost::Oneof)]
+    pub enum Response {
+        #[prost(message, tag = "1")]
+        Data(super::ServerTimezoneData),
+        #[prost(message, tag = "2")]
+        Error(super::Error),
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct ServerTimezoneData {
+    /// The broker server name of the account.
+    #[prost(string, tag = "1")]
+    pub server: ::prost::alloc::string::String,
+    /// Seconds east of UTC (broker server time = UTC + utc_offset_seconds), a multiple of 15 minutes. Absent when not known
+    /// (source SERVER_TIMEZONE_SOURCE_UNKNOWN); a present 0 is a UTC+0 broker.
+    #[prost(int32, optional, tag = "2")]
+    pub utc_offset_seconds: ::core::option::Option<i32>,
+    /// Where utc_offset_seconds came from.
+    #[prost(enumeration = "ServerTimezoneSource", tag = "3")]
+    pub source: i32,
+    /// When the offset was last validated from a fresh quote: for LIVE the latest reading of this terminal (refreshed every few
+    /// seconds), for LAST_VALIDATED the latest reading of any terminal of the same broker server. Unset when UNKNOWN.
+    #[prost(message, optional, tag = "4")]
+    pub validated_utc: ::core::option::Option<::prost_types::Timestamp>,
+}
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum ServerTimezoneSource {
+    /// No terminal of this broker server has read the offset yet (MT4 with the market closed); the *_utc fields stay unset.
+    Unknown = 0,
+    /// Read by this terminal itself.
+    Live = 1,
+    /// The last offset validated for this broker server, used until this terminal reads its own (MT4 with the market closed).
+    LastValidated = 2,
+}
+impl ServerTimezoneSource {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            ServerTimezoneSource::Unknown => "SERVER_TIMEZONE_SOURCE_UNKNOWN",
+            ServerTimezoneSource::Live => "SERVER_TIMEZONE_SOURCE_LIVE",
+            ServerTimezoneSource::LastValidated => {
+                "SERVER_TIMEZONE_SOURCE_LAST_VALIDATED"
+            }
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "SERVER_TIMEZONE_SOURCE_UNKNOWN" => Some(Self::Unknown),
+            "SERVER_TIMEZONE_SOURCE_LIVE" => Some(Self::Live),
+            "SERVER_TIMEZONE_SOURCE_LAST_VALIDATED" => Some(Self::LastValidated),
+            _ => None,
+        }
+    }
+}
+/// Generated client implementations.
+pub mod server_timezone_client {
+    #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
+    use tonic::codegen::*;
+    use tonic::codegen::http::Uri;
+    /// ============================================================================
+    /// ServerTimezone: the broker server's time zone the platform uses for this account, and where it came from.
+    ///
+    /// Every *_utc field of the API is the broker server time minus this offset. Answered by the platform itself from what it
+    /// knows (the terminal is not asked unless nothing is known yet), so it is cheap to call.
+    /// ============================================================================
+    #[derive(Debug, Clone)]
+    pub struct ServerTimezoneClient<T> {
+        inner: tonic::client::Grpc<T>,
+    }
+    impl ServerTimezoneClient<tonic::transport::Channel> {
+        /// Attempt to create a new client by connecting to a given endpoint.
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        where
+            D: TryInto<tonic::transport::Endpoint>,
+            D::Error: Into<StdError>,
+        {
+            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
+            Ok(Self::new(conn))
+        }
+    }
+    impl<T> ServerTimezoneClient<T>
+    where
+        T: tonic::client::GrpcService<tonic::body::BoxBody>,
+        T::Error: Into<StdError>,
+        T::ResponseBody: Body<Data = Bytes> + Send + 'static,
+        <T::ResponseBody as Body>::Error: Into<StdError> + Send,
+    {
+        pub fn new(inner: T) -> Self {
+            let inner = tonic::client::Grpc::new(inner);
+            Self { inner }
+        }
+        pub fn with_origin(inner: T, origin: Uri) -> Self {
+            let inner = tonic::client::Grpc::with_origin(inner, origin);
+            Self { inner }
+        }
+        pub fn with_interceptor<F>(
+            inner: T,
+            interceptor: F,
+        ) -> ServerTimezoneClient<InterceptedService<T, F>>
+        where
+            F: tonic::service::Interceptor,
+            T::ResponseBody: Default,
+            T: tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+                Response = http::Response<
+                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
+                >,
+            >,
+            <T as tonic::codegen::Service<
+                http::Request<tonic::body::BoxBody>,
+            >>::Error: Into<StdError> + Send + Sync,
+        {
+            ServerTimezoneClient::new(InterceptedService::new(inner, interceptor))
+        }
+        /// Compress requests with the given encoding.
+        ///
+        /// This requires the server to support it otherwise it might respond with an
+        /// error.
+        #[must_use]
+        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.send_compressed(encoding);
+            self
+        }
+        /// Enable decompressing responses.
+        #[must_use]
+        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
+            self.inner = self.inner.accept_compressed(encoding);
+            self
+        }
+        /// Limits the maximum size of a decoded message.
+        ///
+        /// Default: `4MB`
+        #[must_use]
+        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_decoding_message_size(limit);
+            self
+        }
+        /// Limits the maximum size of an encoded message.
+        ///
+        /// Default: `usize::MAX`
+        #[must_use]
+        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
+            self.inner = self.inner.max_encoding_message_size(limit);
+            self
+        }
+        /// The broker server's UTC offset of the terminal in the "id" header: live (read by this terminal from a fresh quote) or the
+        /// last one validated for the same broker server (an account whose market is closed has no quote to read it from - MT4 only;
+        /// MT5 reads its server clock directly and is always live).
+        pub async fn server_timezone(
+            &mut self,
+            request: impl tonic::IntoRequest<super::ServerTimezoneRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::ServerTimezoneReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.ServerTimezone/ServerTimezone",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("mt4_term_api.ServerTimezone", "ServerTimezone"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+    }
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct OnSymbolTickRequest {
     #[prost(string, repeated, tag = "1")]
     pub symbol_names: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
@@ -5409,6 +5432,9 @@ pub struct OnSymbolMqlTickInfo {
     /// Time of the last prices update (Unix timestamp)
     #[prost(message, optional, tag = "1")]
     pub time: ::core::option::Option<::prost_types::Timestamp>,
+    /// time in UTC (the same moment; time is in the broker server's time zone).
+    #[prost(message, optional, tag = "8")]
+    pub time_utc: ::core::option::Option<::prost_types::Timestamp>,
     /// Current Bid price
     #[prost(double, tag = "2")]
     pub bid: f64,
@@ -5424,6 +5450,9 @@ pub struct OnSymbolMqlTickInfo {
     /// Time of a price last update in milliseconds
     #[prost(int64, tag = "6")]
     pub time_msc: i64,
+    /// time_msc in UTC (the same moment; time_msc is in the broker server's time zone).
+    #[prost(int64, tag = "9")]
+    pub time_msc_utc: i64,
     #[prost(string, tag = "7")]
     pub symbol: ::prost::alloc::string::String,
 }
@@ -5488,6 +5517,9 @@ pub struct OnTradeOrderInfo {
     pub commission: f64,
     #[prost(message, optional, tag = "6")]
     pub expiration: ::core::option::Option<::prost_types::Timestamp>,
+    /// expiration in UTC (the same moment; expiration is in the broker server's time zone).
+    #[prost(message, optional, tag = "20")]
+    pub expiration_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "7")]
     pub lots: f64,
     #[prost(int32, tag = "8")]
@@ -5496,6 +5528,9 @@ pub struct OnTradeOrderInfo {
     pub open_price: f64,
     #[prost(message, optional, tag = "10")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "21")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "11")]
     pub order_profit: f64,
     #[prost(double, tag = "12")]
@@ -5514,6 +5549,9 @@ pub struct OnTradeOrderInfo {
     /// Only for closed orders (history)
     #[prost(message, optional, tag = "18")]
     pub close_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// close_time in UTC (the same moment; close_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "22")]
+    pub close_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(int64, tag = "19")]
     pub account_login: i64,
 }
@@ -5557,6 +5595,9 @@ pub struct OnOpenedOrdersTicketsData {
     pub pending_order_tickets: ::prost::alloc::vec::Vec<i32>,
     #[prost(message, optional, tag = "3")]
     pub server_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// server_time in UTC (the same moment; server_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "6")]
+    pub server_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(string, tag = "5")]
     pub terminal_instance_guid_id: ::prost::alloc::string::String,
 }
@@ -5630,6 +5671,9 @@ pub struct OnOpenedOrdersProfitOrderInfo {
     pub commission: f64,
     #[prost(message, optional, tag = "5")]
     pub expiration: ::core::option::Option<::prost_types::Timestamp>,
+    /// expiration in UTC (the same moment; expiration is in the broker server's time zone).
+    #[prost(message, optional, tag = "16")]
+    pub expiration_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "6")]
     pub lots: f64,
     #[prost(int32, tag = "7")]
@@ -5638,6 +5682,9 @@ pub struct OnOpenedOrdersProfitOrderInfo {
     pub open_price: f64,
     #[prost(message, optional, tag = "9")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "17")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "10")]
     pub order_profit: f64,
     #[prost(double, tag = "11")]
@@ -5936,6 +5983,9 @@ pub struct TradeStatsRequest {
     /// From datetime in format: yyyy-MM-ddTHH:mm:ss
     #[prost(string, optional, tag = "1")]
     pub from: ::core::option::Option<::prost::alloc::string::String>,
+    /// from in UTC: send either from or from_utc, not both.
+    #[prost(string, optional, tag = "2")]
+    pub from_utc: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -5960,6 +6010,9 @@ pub struct TradeStatsEquityHistoryRequest {
     /// From datetime in format: yyyy-MM-ddTHH:mm:ss
     #[prost(string, optional, tag = "1")]
     pub from: ::core::option::Option<::prost::alloc::string::String>,
+    /// from in UTC: send either from or from_utc, not both.
+    #[prost(string, optional, tag = "3")]
+    pub from_utc: ::core::option::Option<::prost::alloc::string::String>,
     /// Return short version without equal bars
     #[prost(bool, optional, tag = "2")]
     pub exclude_same_bars: ::core::option::Option<bool>,
@@ -5987,6 +6040,9 @@ pub struct EquityHistoryRequest {
     /// From datetime in format: yyyy-MM-ddTHH:mm:ss
     #[prost(string, optional, tag = "1")]
     pub from: ::core::option::Option<::prost::alloc::string::String>,
+    /// from in UTC: send either from or from_utc, not both.
+    #[prost(string, optional, tag = "3")]
+    pub from_utc: ::core::option::Option<::prost::alloc::string::String>,
     /// Return short version without equal bars
     #[prost(bool, optional, tag = "2")]
     pub exclude_same_bars: ::core::option::Option<bool>,
@@ -6014,6 +6070,9 @@ pub struct TradeUnrealizedPlRequest {
     /// From datetime in format: yyyy-MM-ddTHH:mm:ss
     #[prost(string, optional, tag = "1")]
     pub from: ::core::option::Option<::prost::alloc::string::String>,
+    /// from in UTC: send either from or from_utc, not both.
+    #[prost(string, optional, tag = "2")]
+    pub from_utc: ::core::option::Option<::prost::alloc::string::String>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -6159,6 +6218,9 @@ pub struct ProfitData {
     pub tiket: i64,
     #[prost(message, optional, tag = "2")]
     pub date: ::core::option::Option<::prost_types::Timestamp>,
+    /// date in UTC (the same moment; date is in the broker server's time zone).
+    #[prost(message, optional, tag = "4")]
+    pub date_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "3")]
     pub profit: f64,
 }
@@ -6207,8 +6269,14 @@ pub struct TradeHistoryItemData {
     pub close_price: f64,
     #[prost(message, optional, tag = "7")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "13")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(message, optional, tag = "8")]
     pub close_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// close_time in UTC (the same moment; close_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "14")]
+    pub close_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "9")]
     pub profit: f64,
     #[prost(double, tag = "10")]
@@ -6229,6 +6297,9 @@ pub struct EquityHistoryData {
 pub struct EquityPointData {
     #[prost(message, optional, tag = "1")]
     pub time: ::core::option::Option<::prost_types::Timestamp>,
+    /// time in UTC (the same moment; time is in the broker server's time zone).
+    #[prost(message, optional, tag = "10")]
+    pub time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "2")]
     pub balance: f64,
     #[prost(double, tag = "3")]
@@ -6261,10 +6332,16 @@ pub struct TradeUnrealizedExtremaData {
     pub symbol: ::prost::alloc::string::String,
     #[prost(message, optional, tag = "3")]
     pub max_unrealized_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// max_unrealized_time in UTC (the same moment; max_unrealized_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "7")]
+    pub max_unrealized_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "4")]
     pub max_unrealized_pl: f64,
     #[prost(message, optional, tag = "5")]
     pub min_unrealized_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// min_unrealized_time in UTC (the same moment; min_unrealized_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "8")]
+    pub min_unrealized_time_utc: ::core::option::Option<::prost_types::Timestamp>,
     #[prost(double, tag = "6")]
     pub min_unrealized_pl: f64,
 }
@@ -6511,8 +6588,14 @@ pub struct OrderCloseByData {
     pub close_price: f64,
     #[prost(double, tag = "2")]
     pub profit: f64,
+    /// Close time of the orders (broker server time).
+    /// With UTC time the call is refused before the orders are closed when the offset cannot be determined (ACCOUNT_NOT_CONNECTED /
+    /// SERVER_TIMEZONE_UNDETERMINED).
     #[prost(message, optional, tag = "3")]
     pub close_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// close_time in UTC (the same moment; close_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "4")]
+    pub close_time_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -6547,6 +6630,9 @@ pub struct OrderSendRequest {
     /// not required default null
     #[prost(message, optional, tag = "10")]
     pub expiration: ::core::option::Option<::prost_types::Timestamp>,
+    /// expiration in UTC: send either expiration or expiration_utc, not both.
+    #[prost(message, optional, tag = "11")]
+    pub expiration_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -6574,8 +6660,14 @@ pub struct OrderSendData {
     pub volume: f64,
     #[prost(double, tag = "3")]
     pub price: f64,
+    /// Open time of the order (broker server time).
+    /// With UTC time the call is refused before the order is sent when the offset cannot be determined (ACCOUNT_NOT_CONNECTED /
+    /// SERVER_TIMEZONE_UNDETERMINED), so an executed order always has a reply in the same time zone as its request.
     #[prost(message, optional, tag = "4")]
     pub open_time: ::core::option::Option<::prost_types::Timestamp>,
+    /// open_time in UTC (the same moment; open_time is in the broker server's time zone).
+    #[prost(message, optional, tag = "5")]
+    pub open_time_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -6588,8 +6680,12 @@ pub struct OrderModifyRequest {
     pub new_stop_loss: ::core::option::Option<f64>,
     #[prost(double, optional, tag = "4")]
     pub new_take_profit: ::core::option::Option<f64>,
+    /// New expiration of a pending order (broker server time). Unset = the expiration is not changed.
     #[prost(message, optional, tag = "5")]
     pub new_expiration: ::core::option::Option<::prost_types::Timestamp>,
+    /// new_expiration in UTC: send either new_expiration or new_expiration_utc, not both.
+    #[prost(message, optional, tag = "6")]
+    pub new_expiration_utc: ::core::option::Option<::prost_types::Timestamp>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
