@@ -12,7 +12,7 @@
 ## 📦 Installation
 
 ```bash
-cargo add rustmt4
+git clone https://github.com/MetaRPC/RustMT4.git
 ```
 
 ---

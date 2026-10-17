@@ -18,10 +18,10 @@
 
 ## 📦 Installation
 
-Install RustMT4 via your standard Rust package manager:
+RustMT4 is not published on a package registry; get it from the repository:
 
 ```bash
-cargo add metarpc-mt4
+git clone https://github.com/MetaRPC/RustMT4.git
 ```
 
 ---
