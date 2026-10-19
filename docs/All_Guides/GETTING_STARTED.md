@@ -1,5 +1,7 @@
 # Getting Started with RustMT4
 
+> **Preview: this SDK does not talk to the server yet.** `connect`, the account and order calls return simulated values (a fixed balance, made-up order tickets) and nothing is traded. For real MT4 accounts use the Python, Node.js, C#, Go or Java SDK, or the [REST API](https://mrpc.pro/docs-legacy/mt4-client-api).
+
 > **Quick Setup & Overview** - Start automating your trading with RustMT4 (Rust for MetaTrader 4) in minutes.
 
 ---
