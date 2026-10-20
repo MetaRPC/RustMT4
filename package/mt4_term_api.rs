@@ -668,6 +668,27 @@ pub struct AccountSummaryData {
     /// last daylight-saving change is off by the daylight-saving step (usually 3600 s).
     #[prost(int32, optional, tag = "14")]
     pub server_utc_offset_seconds: ::core::option::Option<i32>,
+    /// Money state and permissions, read by the terminal in the same AccountSummary round trip (no separate AccountInfoDouble /
+    /// AccountInfoInteger calls needed). All are 0/false while the account is not connected. One AccountSummary call is one counted read.
+    ///
+    /// Margin reserved by open positions (ACCOUNT_MARGIN), account currency.
+    #[prost(double, tag = "13")]
+    pub account_margin: f64,
+    /// Free margin for new positions (ACCOUNT_MARGIN_FREE), account currency.
+    #[prost(double, tag = "16")]
+    pub account_margin_free: f64,
+    /// Margin level in percent, equity / margin * 100 (ACCOUNT_MARGIN_LEVEL); 0 when no margin is used.
+    #[prost(double, tag = "17")]
+    pub account_margin_level: f64,
+    /// Always hedging on MT4 (several positions per symbol); present for parity with MT5.
+    #[prost(enumeration = "EnumAccountMarginMode", tag = "18")]
+    pub account_margin_mode: i32,
+    /// The account may trade (ACCOUNT_TRADE_ALLOWED); is_investor is its negation.
+    #[prost(bool, tag = "19")]
+    pub account_trade_allowed: bool,
+    /// Automated (Expert Advisor / API) trading is allowed for the account (ACCOUNT_TRADE_EXPERT).
+    #[prost(bool, tag = "20")]
+    pub account_trade_expert: bool,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -1117,6 +1138,46 @@ pub struct SymbolTickValueWithSizeInfo {
     #[prost(double, tag = "5")]
     pub trade_contract_size: f64,
 }
+/// Margin calculation mode of the account. MT4 accounts are always hedging; the other values exist for parity with MT5.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+#[repr(i32)]
+pub enum EnumAccountMarginMode {
+    AccountMarginModeRetailNetting = 0,
+    AccountMarginModeExchange = 1,
+    AccountMarginModeRetailHedging = 2,
+}
+impl EnumAccountMarginMode {
+    /// String value of the enum field names used in the ProtoBuf definition.
+    ///
+    /// The values are not transformed in any way and thus are considered stable
+    /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+    pub fn as_str_name(&self) -> &'static str {
+        match self {
+            EnumAccountMarginMode::AccountMarginModeRetailNetting => {
+                "ACCOUNT_MARGIN_MODE_RETAIL_NETTING"
+            }
+            EnumAccountMarginMode::AccountMarginModeExchange => {
+                "ACCOUNT_MARGIN_MODE_EXCHANGE"
+            }
+            EnumAccountMarginMode::AccountMarginModeRetailHedging => {
+                "ACCOUNT_MARGIN_MODE_RETAIL_HEDGING"
+            }
+        }
+    }
+    /// Creates an enum from field names used in the ProtoBuf definition.
+    pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+        match value {
+            "ACCOUNT_MARGIN_MODE_RETAIL_NETTING" => {
+                Some(Self::AccountMarginModeRetailNetting)
+            }
+            "ACCOUNT_MARGIN_MODE_EXCHANGE" => Some(Self::AccountMarginModeExchange),
+            "ACCOUNT_MARGIN_MODE_RETAIL_HEDGING" => {
+                Some(Self::AccountMarginModeRetailHedging)
+            }
+            _ => None,
+        }
+    }
+}
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum EnumAccountTradeMode {
@@ -1191,6 +1252,12 @@ pub enum OpenedOrderType {
     OoOpSelllimit = 3,
     OoOpBuystop = 4,
     OoOpSellstop = 5,
+    /// OrdersHistory only: account operations of the history (MT4 records types 6 and 7). The amount is in profit, the text in comment.
+    ///
+    /// Deposit or withdrawal (negative profit)
+    OoOpBalance = 6,
+    /// Credit given or taken
+    OoOpCredit = 7,
 }
 impl OpenedOrderType {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -1205,6 +1272,8 @@ impl OpenedOrderType {
             OpenedOrderType::OoOpSelllimit => "OO_OP_SELLLIMIT",
             OpenedOrderType::OoOpBuystop => "OO_OP_BUYSTOP",
             OpenedOrderType::OoOpSellstop => "OO_OP_SELLSTOP",
+            OpenedOrderType::OoOpBalance => "OO_OP_BALANCE",
+            OpenedOrderType::OoOpCredit => "OO_OP_CREDIT",
         }
     }
     /// Creates an enum from field names used in the ProtoBuf definition.
@@ -1216,6 +1285,8 @@ impl OpenedOrderType {
             "OO_OP_SELLLIMIT" => Some(Self::OoOpSelllimit),
             "OO_OP_BUYSTOP" => Some(Self::OoOpBuystop),
             "OO_OP_SELLSTOP" => Some(Self::OoOpSellstop),
+            "OO_OP_BALANCE" => Some(Self::OoOpBalance),
+            "OO_OP_CREDIT" => Some(Self::OoOpCredit),
             _ => None,
         }
     }
@@ -2604,9 +2675,7 @@ pub mod connection_client {
     }
     impl ConnectionClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
-        /// (Renamed from `connect` by the fleet audit: the generated constructor collided with
-        /// the `Connect` RPC method of the same name and the module did not compile.)
-        pub async fn connect_endpoint<D>(dst: D) -> Result<Self, tonic::transport::Error>
+        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
             D: TryInto<tonic::transport::Endpoint>,
             D::Error: Into<StdError>,
@@ -3306,6 +3375,57 @@ pub mod logs_client {
         }
     }
 }
+/// Field numbers match mt4-term-native/Protos (the terminal side).
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuiDemoFindCompaniesRequest {
+    #[prost(string, tag = "1")]
+    pub search_text: ::prost::alloc::string::String,
+    #[prost(int32, tag = "2")]
+    pub timeout_seconds: i32,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuiDemoFindCompaniesReply {
+    #[prost(int32, tag = "1")]
+    pub result_code: i32,
+    #[prost(message, repeated, tag = "2")]
+    pub companies: ::prost::alloc::vec::Vec<GuiDemoCompany>,
+    #[prost(string, tag = "3")]
+    pub debug_log: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuiDemoCompany {
+    #[prost(string, tag = "1")]
+    pub name: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub short_name: ::prost::alloc::string::String,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuiDemoServersAndTypesRequest {
+    #[prost(string, tag = "1")]
+    pub company_name: ::prost::alloc::string::String,
+    #[prost(int32, tag = "2")]
+    pub timeout_seconds: i32,
+}
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct GuiDemoServersAndTypesReply {
+    #[prost(int32, tag = "1")]
+    pub result_code: i32,
+    #[prost(string, repeated, tag = "2")]
+    pub servers: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "3")]
+    pub account_types: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "4")]
+    pub deposits: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, repeated, tag = "5")]
+    pub leverages: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    #[prost(string, tag = "6")]
+    pub debug_log: ::prost::alloc::string::String,
+}
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct GuiDemoOpenAccountRequest {
@@ -3756,6 +3876,56 @@ pub mod gui_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        pub async fn demo_find_companies(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GuiDemoFindCompaniesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GuiDemoFindCompaniesReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.Gui/DemoFindCompanies",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("mt4_term_api.Gui", "DemoFindCompanies"));
+            self.inner.unary(req, path, codec).await
+        }
+        pub async fn demo_servers_and_types(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GuiDemoServersAndTypesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GuiDemoServersAndTypesReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.Gui/DemoServersAndTypes",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("mt4_term_api.Gui", "DemoServersAndTypes"));
+            self.inner.unary(req, path, codec).await
+        }
         pub async fn demo_open_account(
             &mut self,
             request: impl tonic::IntoRequest<super::GuiDemoOpenAccountRequest>,
@@ -3902,7 +4072,67 @@ pub mod demo_account_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
-        /// Open a demo account. Full wizard flow: search -> select -> fill form -> register.
+        /// Search for broker companies by name (reads the wizard's broker ListView).
+        /// [DefaultValues]
+        /// { "searchText": "MetaQuotes" }
+        pub async fn find_companies(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GuiDemoFindCompaniesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GuiDemoFindCompaniesReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.DemoAccount/FindCompanies",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("mt4_term_api.DemoAccount", "FindCompanies"));
+            self.inner.unary(req, path, codec).await
+        }
+        /// Get available servers and account types for a company.
+        /// [DefaultValues]
+        /// { "companyName": "MetaQuotes Ltd." }
+        pub async fn servers_and_account_types(
+            &mut self,
+            request: impl tonic::IntoRequest<super::GuiDemoServersAndTypesRequest>,
+        ) -> std::result::Result<
+            tonic::Response<super::GuiDemoServersAndTypesReply>,
+            tonic::Status,
+        > {
+            self.inner
+                .ready()
+                .await
+                .map_err(|e| {
+                    tonic::Status::new(
+                        tonic::Code::Unknown,
+                        format!("Service was not ready: {}", e.into()),
+                    )
+                })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static(
+                "/mt4_term_api.DemoAccount/ServersAndAccountTypes",
+            );
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(
+                    GrpcMethod::new("mt4_term_api.DemoAccount", "ServersAndAccountTypes"),
+                );
+            self.inner.unary(req, path, codec).await
+        }
+        /// Open a demo account. The wire protocol is tried first; when the trade server does not
+        /// accept it, the terminal's "Open an Account" wizard is driven instead, bounded by
+        /// timeoutSeconds (default 90). debugLog names the path that produced the account.
         /// [DefaultValues]
         /// { "company": "MetaQuotes Ltd.", "firstName": "Test", "lastName": "User",
         ///   "email": "test@test.com", "phone": "+1234567890", "timeoutSeconds": "60" }
