@@ -11,9 +11,16 @@
 
 ## 📦 Installation
 
-```bash
-cargo add rustmt4
+The crate is **not** published on crates.io. Add it as a git or path dependency:
+
+```toml
+[dependencies]
+metarpc-mt4 = { git = "https://github.com/MetaRPC/RustMT4" }   # or: path = "../RustMT4"
+tokio = { version = "1", features = ["full"] }
 ```
+
+The client talks gRPC over TLS (tonic 0.12 / prost 0.13, generated code vendored in `package/`), so
+no `protoc` is needed at build time.
 
 ---
 
@@ -25,15 +32,28 @@ Clone the repository and run the quickstart example out-of-the-box:
 git clone https://github.com/MetaRPC/RustMT4.git
 cd RustMT4
 
-# 1. Run with default TRIAL key:
+# arguments: <login> <password> <server name> [api_key]
+cargo run --example quickstart -- 1234567 password FreshForex-Demo your_api_key_here
+
+# or via the environment (MRPC_API_KEY, MT4_LOGIN, MT4_PASSWORD, MT4_SERVER):
+export MRPC_API_KEY="your_api_key_here"        # Windows PowerShell: $env:MRPC_API_KEY="your_api_key_here"
 cargo run --example quickstart
+```
 
-# 2. Or pass your MetaRPC API key directly as an argument:
-cargo run --example quickstart -- your_api_key_here
+Minimal usage:
 
-# 3. Or use the MRPC_API_KEY environment variable:
-export MRPC_API_KEY="your_api_key_here"        # Windows CMD: set MRPC_API_KEY=your_api_key_here
-cargo run --example quickstart                 # Windows PowerShell: $env:MRPC_API_KEY="your_api_key_here"
+```rust
+use metarpc_mt4::{MT4Client, OrderRequest, OrderType, timeframe};
+
+let client = MT4Client::with_api_key("mt4.mrpc.pro", 443, api_key)
+    .with_id(MT4Client::stable_terminal_id("my-strategy-1"));   // stable id => terminal is reused
+client.connect_ex(login, &password, "FreshForex-Demo", Some("my-strategy-1"), 120).await?;
+let acc = client.get_account_info().await?;           // acc.trade_mode.is_demo()
+let q = client.quote("EURUSD").await?;                 // bid / ask
+let bars = client.bars("EURUSD", timeframe::M1, 50).await?;
+let res = client.order_send(OrderRequest::market("EURUSD", OrderType::Buy, 0.01).with_magic(1)).await?;
+client.order_modify(res.ticket, Some(sl), Some(tp)).await?;
+client.order_close(res.ticket, None, 20).await?;
 ```
 
 ---

@@ -1,86 +1,71 @@
-use metarpc_mt4::{MT4Client, OrderRequest, OrderType, AccountInfo};
+//! Offline unit tests (no network). Live tests run through fleet/runners/rust-mt4/smoke.
 
-#[tokio::test]
-async fn test_deterministic_id() {
+use metarpc_mt4::{timeframe, MT4Client, OrderRequest, OrderType, Quote, TradeMode};
+
+#[test]
+fn deterministic_id_is_stable() {
     let id = MT4Client::compute_deterministic_id(12345678, "demo_password");
     assert_eq!(id, "6ce74465-7aa9-3a79-2bd8-e40241b50c43");
 }
 
+#[test]
+fn stable_terminal_id_is_uuid5() {
+    let a = MT4Client::stable_terminal_id("fleet-audit-RustMT4");
+    let b = MT4Client::stable_terminal_id("fleet-audit-RustMT4");
+    assert_eq!(a, b);
+    assert_eq!(a.len(), 36);
+    assert_eq!(&a[14..15], "5", "uuid version nibble must be 5");
+    assert_ne!(a, MT4Client::stable_terminal_id("S001"));
+}
+
 #[tokio::test]
-async fn test_get_id_generation() {
+async fn get_id_sets_client_id() {
     let mut client = MT4Client::new("mt4.mrpc.pro", 443);
-    let id_res = client.get_id(100234, "demo_pass").await;
-    assert!(id_res.is_ok());
-    let id = id_res.unwrap();
+    let id = client.get_id(100234, "demo_pass").await.unwrap();
     assert!(!id.is_empty());
     assert_eq!(client.id.as_deref(), Some(id.as_str()));
-}
-
-#[tokio::test]
-async fn test_client_connection_lifecycle() {
-    let mut client = MT4Client::new("mt4.mrpc.pro", 443);
     assert!(!client.is_connected());
-
-    let conn_res = client.connect(1001, "demo_pass").await;
-    assert!(conn_res.is_ok());
-    assert!(client.is_connected());
-    assert!(client.id.is_some());
-
-    let acc_res = client.get_account_info().await;
-    assert!(acc_res.is_ok());
-    let acc = acc_res.unwrap();
-    assert_eq!(acc.currency, "USD");
-    assert!(acc.balance > 0.0);
-
-    client.disconnect(true).await;
-    assert!(!client.is_connected());
-}
-
-#[tokio::test]
-async fn test_order_lifecycle() {
-    let mut client = MT4Client::new("mt4.mrpc.pro", 443);
-    client.connect(1001, "demo_pass").await.unwrap();
-
-    let req = OrderRequest {
-        symbol: "EURUSD".to_string(),
-        order_type: OrderType::Buy,
-        lots: 0.1,
-        price: Some(1.0850),
-        stop_loss: Some(1.0800),
-        take_profit: Some(1.0900),
-        slippage: Some(5),
-        comment: Some("Test order".to_string()),
-    };
-
-    let res = client.order_send(req).await;
-    assert!(res.is_ok());
-    let order = res.unwrap();
-    assert_eq!(order.lots, 0.1);
-    assert_eq!(order.error_code, 0);
-
-    let mod_res = client.order_modify(order.ticket, 1.0790, 1.0910).await;
-    assert!(mod_res.is_ok());
-
-    let close_res = client.order_close(order.ticket, 0.1).await;
-    assert!(close_res.is_ok());
 }
 
 #[test]
-fn test_serialization() {
-    let acc = AccountInfo {
-        login: 12345,
-        currency: "EUR".to_string(),
-        balance: 10000.0,
-        equity: 10000.0,
-        margin: 0.0,
-        free_margin: 10000.0,
-        leverage: 100,
-        name: "Test User".to_string(),
-        server: "demo".to_string(),
-    };
+fn order_request_maps_to_proto() {
+    let req = OrderRequest::market("EURUSD", OrderType::Buy, 0.01)
+        .with_magic(599999)
+        .with_comment("fleet-audit")
+        .with_sl_tp(Some(1.0), Some(1.2));
+    let p = req.to_proto();
+    assert_eq!(p.symbol, "EURUSD");
+    assert_eq!(p.operation_type, 0);
+    assert_eq!(p.volume, 0.01);
+    assert_eq!(p.price, None);
+    assert_eq!(p.stoploss, Some(1.0));
+    assert_eq!(p.takeprofit, Some(1.2));
+    assert_eq!(p.magic_number, Some(599999));
+    assert_eq!(p.comment.as_deref(), Some("fleet-audit"));
+    assert_eq!(p.slippage, Some(20));
+    assert_eq!(OrderType::SellStop.to_operation() as i32, 5);
+    assert_eq!(OrderType::from_i32(3), Some(OrderType::SellLimit));
+}
 
-    let json = serde_json::to_string(&acc).expect("Failed to serialize");
-    let deserialized: AccountInfo = serde_json::from_str(&json).expect("Failed to deserialize");
-    assert_eq!(deserialized.login, 12345);
-    assert_eq!(deserialized.currency, "EUR");
+#[test]
+fn timeframes_are_quote_history_enum_values() {
+    assert_eq!(timeframe::M1, 0);
+    assert_eq!(timeframe::H1, 4);
+    assert_eq!(timeframe::parse("m5"), Some(1));
+    assert_eq!(timeframe::parse("X"), None);
+    assert_eq!(timeframe::seconds(timeframe::H4), 14400);
+}
+
+#[test]
+fn quote_usability() {
+    let q = Quote { symbol: "EURUSD".into(), bid: 1.1, ask: 1.1, time: 0, time_msc: 0, high: 0.0, low: 0.0 };
+    assert!(!q.is_usable(), "bid == ask is unusable");
+    let q = Quote { bid: 1.1, ask: 1.1002, ..q };
+    assert!(q.is_usable());
+}
+
+#[test]
+fn trade_mode_decode() {
+    assert!(TradeMode::from_i32(0).is_demo());
+    assert!(!TradeMode::from_i32(2).is_demo());
 }
