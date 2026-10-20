@@ -11,7 +11,12 @@
 
 ## 📦 Installation
 
-The crate is **not** published on crates.io. Add it as a git or path dependency:
+The crate is **not** published on crates.io. Clone the repository and add it as a git or path
+dependency:
+
+```bash
+git clone https://github.com/MetaRPC/RustMT4.git
+```
 
 ```toml
 [dependencies]

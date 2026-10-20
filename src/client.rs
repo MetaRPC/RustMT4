@@ -611,6 +611,9 @@ impl MT4Client {
                 timeframe,
                 from_time: Some(prost_types::Timestamp { seconds: from_server, nanos: 0 }),
                 to_time: Some(prost_types::Timestamp { seconds: to_server, nanos: 0 }),
+                // Newer protos also accept UTC bounds; the SDK keeps sending server time
+                // (the verified behaviour) and leaves the UTC pair empty.
+                ..Default::default()
             };
             let r = c.quote_history(self.req(msg)?).await?;
             let mut bars = unwrap_reply!(r, quote_history_reply).map(|d| d.historical_quotes)?;
@@ -723,7 +726,7 @@ impl MT4Client {
             new_price: None,
             new_stop_loss: stop_loss,
             new_take_profit: take_profit,
-            new_expiration: None,
+            ..Default::default()
         };
         self.order_modify_raw(msg).await.map(|_| ())
     }
@@ -835,8 +838,8 @@ impl MT4Client {
                 input_sort_mode: pb::EnumOrderHistorySortType::HistorySortByCloseTimeDesc as i32,
                 input_from: Some(timestamp(from)),
                 input_to: Some(timestamp(to)),
-                page_number: None,
-                items_per_page: None,
+                // No paging: the whole window in one reply (page_token/page_size stay empty).
+                ..Default::default()
             };
             let r = c.orders_history(self.req(msg)?).await?;
             unwrap_reply!(r, orders_history_reply)

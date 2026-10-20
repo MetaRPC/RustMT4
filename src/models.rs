@@ -236,6 +236,7 @@ impl OrderRequest {
             comment: self.comment.clone(),
             magic_number: self.magic,
             expiration: self.expiration.map(|s| prost_types::Timestamp { seconds: s, nanos: 0 }),
+            ..Default::default()
         }
     }
 }
