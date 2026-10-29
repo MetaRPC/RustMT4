@@ -1834,6 +1834,10 @@ pub struct AccountsListItem {
     /// account, which is the case for every account today.
     #[prost(message, optional, tag = "13")]
     pub expires_utc: ::core::option::Option<::prost_types::Timestamp>,
+    /// The dedicated (reserved) egress IP assigned to this terminal (the dedicated-IP add-on), to whitelist with the broker;
+    /// empty when the terminal has no dedicated IP.
+    #[prost(string, tag = "14")]
+    pub dedicated_ip: ::prost::alloc::string::String,
 }
 /// Generated client implementations.
 pub mod accounts_client {
