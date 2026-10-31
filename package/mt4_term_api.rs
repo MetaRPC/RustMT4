@@ -656,7 +656,8 @@ pub struct AccountSummaryData {
     #[prost(bool, tag = "11")]
     pub is_investor: bool,
     /// The broker server's offset from UTC in whole minutes (server_utc_offset_seconds / 60), a multiple of 15. Information,
-    /// never converted. 0 while the account is not connected yet.
+    /// never converted. While the account is not connected the Terminal Manager answers its last data from while it was
+    /// connected, or ACCOUNT_NOT_CONNECTED when it has never been connected.
     #[prost(int32, tag = "12")]
     pub utc_server_time_shift_minutes: i32,
     /// The broker server's offset from UTC in seconds, positive = ahead of UTC: validated by the terminal (a multiple of 15 minutes).
