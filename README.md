@@ -45,21 +45,32 @@ export MRPC_API_KEY="your_api_key_here"        # Windows PowerShell: $env:MRPC_A
 cargo run --example quickstart
 ```
 
-Minimal usage:
+Minimal usage (three-layer client — `MT4Sugar` is the shortest path):
 
 ```rust
-use metarpc_mt4::{MT4Client, OrderRequest, OrderType, timeframe};
+use metarpc_mt4::{MT4Account, MT4Service, MT4Sugar};
+use metarpc_mt4::mt4_term_api as pb;
 
-let client = MT4Client::with_api_key("mt4.mrpc.pro", 443, api_key)
-    .with_id(MT4Client::stable_terminal_id("my-strategy-1"));   // stable id => terminal is reused
-client.connect_ex(login, &password, "FreshForex-Demo", Some("my-strategy-1"), 120).await?;
-let acc = client.get_account_info().await?;           // acc.trade_mode.is_demo()
-let q = client.quote("EURUSD").await?;                 // bid / ask
-let bars = client.bars("EURUSD", timeframe::M1, 50).await?;
-let res = client.order_send(OrderRequest::market("EURUSD", OrderType::Buy, 0.01).with_magic(1)).await?;
-client.order_modify(res.ticket, Some(sl), Some(tp)).await?;
-client.order_close(res.ticket, None, 20).await?;
+// host + port; MRPC_API_KEY is read from the environment.
+// A stable id reuses the same terminal across runs.
+let sugar = MT4Sugar::new(MT4Service::new(
+        MT4Account::new("mt4.mrpc.pro", 443)
+            .with_id(MT4Account::stable_terminal_id("my-strategy-1")),
+    ))
+    .set_defaults(1, 20, "my-strategy-1");          // magic, slippage (points), comment
+
+sugar.connect_by_server_name(login, &password, "FreshForex-Demo", Some("my-strategy-1"), 120).await?;
+
+let acc = sugar.get_account_info().await?;          // acc.balance, acc.currency, acc.trade_mode.is_demo()
+let q   = sugar.last_quote("EURUSD").await?;         // q.bid / q.ask
+let bars = sugar.bars("EURUSD", pb::EnumQuoteHistoryTimeframe::QhPeriodM1 as i32, 50).await?;
+
+let res = sugar.buy_market("EURUSD", 0.01, None, None).await?;
+sugar.modify_sl_tp_by_pips(res.ticket, Some(20.0), Some(40.0)).await?;   // 20-pip SL, 40-pip TP
+sugar.close(res.ticket, None).await?;
 ```
+
+Layers: **MT4Account** (raw gRPC) → **MT4Service** (friendly args) → **MT4Sugar** (one-liners). Drop down a level any time with `sugar.service()` / `service.account()`.
 
 ---
 
@@ -78,7 +89,7 @@ Connecting to MetaRPC production endpoints (`mt4.mrpc.pro:443`) requires an API 
 MetaRPC endpoints route calls using a terminal session identifier (`id`):
 - When connecting via `Connect` / `ConnectEx`, the server automatically generates and returns a session GUID (`terminalInstanceGuid`).
 - The SDK automatically captures this session ID and attaches both the `id` and `APIKey` headers on all subsequent calls (`AccountSummary`, `OrderSend`, streaming, etc.) — no manual `GetId` or `curl` calls required.
-- Pass your API key directly to the Account/Client constructor or via the `MRPC_API_KEY` environment variable.
+- Provide your API key via the `MRPC_API_KEY` environment variable (or `api_key` in `settings.json`); the SDK sends it on every call.
 
 ## 🌐 Production Endpoints
 
