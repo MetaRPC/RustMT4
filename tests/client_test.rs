@@ -1,30 +1,24 @@
 //! Offline unit tests (no network). Live tests run through fleet/runners/rust-mt4/smoke.
 
-use metarpc_mt4::{timeframe, MT4Client, OrderRequest, OrderType, Quote, TradeMode};
-
-#[test]
-fn deterministic_id_is_stable() {
-    let id = MT4Client::compute_deterministic_id(12345678, "demo_password");
-    assert_eq!(id, "6ce74465-7aa9-3a79-2bd8-e40241b50c43");
-}
+use metarpc_mt4::mt4_term_api as pb;
+use metarpc_mt4::{MT4Account, OrderRequest, OrderType, Quote, TradeMode};
 
 #[test]
 fn stable_terminal_id_is_uuid5() {
-    let a = MT4Client::stable_terminal_id("fleet-audit-RustMT4");
-    let b = MT4Client::stable_terminal_id("fleet-audit-RustMT4");
-    assert_eq!(a, b);
+    let a = MT4Account::stable_terminal_id("fleet-audit-RustMT4");
+    let b = MT4Account::stable_terminal_id("fleet-audit-RustMT4");
+    assert_eq!(a, b, "same label must yield the same id");
     assert_eq!(a.len(), 36);
     assert_eq!(&a[14..15], "5", "uuid version nibble must be 5");
-    assert_ne!(a, MT4Client::stable_terminal_id("S001"));
+    assert_ne!(a, MT4Account::stable_terminal_id("S001"));
 }
 
-#[tokio::test]
-async fn get_id_sets_client_id() {
-    let mut client = MT4Client::new("mt4.mrpc.pro", 443);
-    let id = client.get_id(100234, "demo_pass").await.unwrap();
-    assert!(!id.is_empty());
-    assert_eq!(client.id.as_deref(), Some(id.as_str()));
-    assert!(!client.is_connected());
+#[test]
+fn account_construction_is_offline() {
+    let id = MT4Account::stable_terminal_id("fleet-audit");
+    let acc = MT4Account::new("mt4.mrpc.pro", 443).with_id(id.clone());
+    assert_eq!(acc.terminal_id().as_deref(), Some(id.as_str()));
+    assert!(!acc.is_connected(), "constructing never connects");
 }
 
 #[test]
@@ -48,12 +42,13 @@ fn order_request_maps_to_proto() {
 }
 
 #[test]
-fn timeframes_are_quote_history_enum_values() {
-    assert_eq!(timeframe::M1, 0);
-    assert_eq!(timeframe::H1, 4);
-    assert_eq!(timeframe::parse("m5"), Some(1));
-    assert_eq!(timeframe::parse("X"), None);
-    assert_eq!(timeframe::seconds(timeframe::H4), 14400);
+fn quote_history_timeframe_enum_values() {
+    // EnumQuoteHistoryTimeframe is an ordinal (M1 = 0 … MN1 = 8), not MQL minutes.
+    assert_eq!(pb::EnumQuoteHistoryTimeframe::QhPeriodM1 as i32, 0);
+    assert_eq!(pb::EnumQuoteHistoryTimeframe::QhPeriodM5 as i32, 1);
+    assert_eq!(pb::EnumQuoteHistoryTimeframe::QhPeriodH1 as i32, 4);
+    assert_eq!(pb::EnumQuoteHistoryTimeframe::QhPeriodH4 as i32, 5);
+    assert_eq!(pb::EnumQuoteHistoryTimeframe::QhPeriodMn1 as i32, 8);
 }
 
 #[test]

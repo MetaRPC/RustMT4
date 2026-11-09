@@ -1,85 +1,89 @@
-# Your First Project in 10 Minutes (Rust)
+# Your First Project in 10 Minutes
 
-> **Hands-on Quick Start** - Create a working trading project with MetaTrader 4 and RustMT4 from scratch.
-
----
-
-## Step 0: Obtain Your API Key
-
-To connect to MetaRPC endpoints (`mt4.mrpc.pro:443`), obtain your API key:
-1. Register for free at [https://mrpc.pro/signup](https://mrpc.pro/signup).
-2. Generate your API token in your dashboard at [https://mrpc.pro/my](https://mrpc.pro/my).
-3. Set your token in your environment or connection config.
+> **Hands-on quick start** — connect to MetaTrader 4 and place a demo order with RustMT4, from scratch.
 
 ---
 
-## Step 1: Create Your Project
+## Step 0 — API key
 
-Create a new directory for your trading bot:
+Connecting to `mt4.mrpc.pro:443` needs a key:
 
-```bash
-mkdir my_rustmt4_bot
-cd my_rustmt4_bot
-```
+1. Register (free): [https://mrpc.pro/signup](https://mrpc.pro/signup).
+2. Generate a token: [https://mrpc.pro/my](https://mrpc.pro/my).
+3. Export it: `set MRPC_API_KEY=...` (Windows) / `export MRPC_API_KEY=...` (bash).
 
-Get the SDK (it is not on a package registry):
+---
+
+## Step 1 — Get the SDK
 
 ```bash
 git clone https://github.com/MetaRPC/RustMT4.git
+cd RustMT4
 ```
+
+It already builds as a library + a set of runnable examples — the fastest path is to run one.
 
 ---
 
-## Step 2: Write Your Trading Code
+## Step 2 — The code
 
-Create your main application file and paste the following snippet:
+The three-layer client. `MT4Sugar` gives you the shortest path to a trade:
 
 ```rust
-use metarpc_mt4::{MT4Client, OrderRequest, OrderType};
+use metarpc_mt4::{MT4Account, MT4Service, MT4Sugar};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Reads MRPC_API_KEY from the environment; a stable id reuses the same terminal on re-runs.
-    let client = MT4Client::new("mt4.mrpc.pro", 443)
-        .with_id(MT4Client::stable_terminal_id("my-first-bot"));
+    // host + port; MRPC_API_KEY comes from the environment.
+    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new("mt4.mrpc.pro", 443)))
+        .set_defaults(1001, 20, "my-first-bot");   // magic, slippage (points), comment
 
-    // Login, password and the broker server name (e.g. "FreshForex-Demo").
-    client.connect(100234, "account_pass", "FreshForex-Demo").await?;
+    // login, password, broker server name, optional label, timeout (s)
+    sugar.connect_by_server_name(12_345_678, "password", "FreshForex-Demo", None, 120).await?;
     println!("Connected to MT4!");
 
-    let acc = client.get_account_info().await?;
-    println!("Account Balance: {} {}", acc.balance, acc.currency);
+    let a = sugar.get_account_info().await?;
+    println!("Balance: {:.2} {}", a.balance, a.currency);
 
-    // Send 0.01 lot Buy at market
-    let req = OrderRequest::market("EURUSD", OrderType::Buy, 0.01)
-        .with_slippage(30)
-        .with_comment("Rust Quickstart");
+    // make sure the symbol is live, then buy 0.01 lot at market
+    sugar.ensure_symbol("EURUSD", std::time::Duration::from_secs(10)).await?;
+    let r = sugar.buy_market("EURUSD", 0.01, None, None).await?;
+    println!("Order sent! Ticket #{} @ {}", r.ticket, r.price);
 
-    let result = client.order_send(req).await?;
-    println!("Order sent! Ticket #{}", result.ticket);
+    // 20-pip stop, 40-pip target (direction-aware, by pips from entry)
+    sugar.modify_sl_tp_by_pips(r.ticket, Some(20.0), Some(40.0)).await?;
 
+    sugar.disconnect(false).await?;
     Ok(())
 }
 ```
 
+> **Demo accounts only** while you learn — `buy_market` sends a real order on whatever account you connect.
+
 ---
 
-## Step 3: Run the Program
+## Step 3 — Run the bundled example
 
-Run your application:
+The repo ships the same flow as [`examples/quickstart.rs`](https://github.com/MetaRPC/RustMT4/blob/main/examples/quickstart.rs):
 
 ```bash
-# from the cloned repository; arguments: <login> <password> <server name> [api_key]
-cargo run --example quickstart -- 1234567 password FreshForex-Demo your_api_key_here
+# arguments: <login> <password> <server name> [api_key]
+cargo run --example quickstart -- 12345678 password FreshForex-Demo your_api_key_here
 ```
 
-Its `examples/quickstart` does the same thing as the snippet above.
+Or launch the **interactive menu** that lists every example:
+
+```bash
+cargo run --example menu
+```
+
+Credentials can also come from `examples/0_common/settings.json` (or `MRPC_*` env vars) — see the [Settings loader](PROJECT_MAP.md).
 
 ---
 
-## 🚀 Next Steps
+## 🚀 Next steps
 
-Congratulations! You have successfully established a direct gRPC connection to MetaTrader 4. Next:
-- Explore **[gRPC Streaming](GRPC_STREAM_MANAGEMENT.md)** to listen to live ticks.
-- Check the **[API Reference](../API_Reference/MT4Account.md)** for all 40+ available terminal methods.
-- Learn about high-level risk management and auto-normalization in **[MT4Sugar](../API_Reference/MT4Sugar.md)**.
+* Stream live prices → **[gRPC Streaming](GRPC_STREAM_MANAGEMENT.md)**.
+* Every terminal method → **[MT4Account API Reference](../MT4Account/MT4Account.Master.Overview.md)**.
+* Risk sizing, trailing, one-liners → **[MT4Sugar](../MT4Sugar/MT4Sugar.Master.Overview.md)**.
+* Full lifecycle templates → **[Strategies](../Strategies/Strategies.Master.Overview.md)**.

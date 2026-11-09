@@ -167,7 +167,7 @@ pub type TradeAction = OrderType;
 
 /// High-level order request. For market orders leave `price` as `None` (the gateway fills at
 /// the current quote). `magic` is the MQL4 magic number, which is how orders are filtered per
-/// strategy (`MT4Client::orders_by_magic`).
+/// strategy (`MT4Sugar::orders_by_magic`).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OrderRequest {
     pub symbol: String,

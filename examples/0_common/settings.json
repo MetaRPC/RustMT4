@@ -1,0 +1,9 @@
+{
+  "_comment": "Template connection settings. Fill in your demo credentials, or override with env vars (MT4_LOGIN, MT4_PASSWORD, MT4_SERVER, MT4_SYMBOL, MT4_NAME, MRPC_API_KEY). Do not commit real credentials.",
+  "user": 0,
+  "password": "YOUR_PASSWORD",
+  "server_name": "FreshForex-Demo",
+  "name": "rustmt4-examples",
+  "api_key": null,
+  "test_symbol": "EURUSD"
+}

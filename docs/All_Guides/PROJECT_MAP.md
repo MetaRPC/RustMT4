@@ -1,84 +1,75 @@
-# RustMT4 Project Map
+# 🗺️ RustMT4 Project Map
 
-> Complete architecture guide. Shows the three-tier system, component interactions, and file organization.
-
----
-
-## 🗺️ Project Architecture Overview
-
-RustMT4 is structured into three clean, decoupled layers designed to satisfy both low-level quantitative control and high-level strategy convenience:
-
-```
-RustMT4/
-├── 📦 Layer 1: MT4Account (Low-level gRPC)
-├── 🔧 Layer 2: MT4Service (Typed wrapper methods)
-└── ⭐ Layer 3: MT4Sugar (High-level convenience API)
-```
+> The whole project as one annotated tree, with links. **Links point to section *overviews*, never to individual method pages** — open an overview to drill down into its methods.
 
 ---
 
-## 📊 Component Interaction Diagram
+## 🧱 The three layers
 
+RustMT4 is built in three decoupled layers (composition, not inheritance). Your code can enter at any level.
+
+| Layer | Source | What it does | Overview |
+| ----- | ------ | ------------ | -------- |
+| **3 · MT4Sugar** | `src/mt4/sugar.rs` | Convenience on top of Service: risk-based sizing, pip-based SL/TP, price/volume helpers, trailing & breakeven, watchers, batch close, order queries. | [MT4Sugar overview](../MT4Sugar/MT4Sugar.Master.Overview.md) |
+| **2 · MT4Service** | `src/mt4/service.rs` | Typed facade: `&str` symbols and typed-enum args; simple getters return clean scalars / `Vec`. What most code uses. | [MT4Service overview](../MT4Service/MT4Service.Overview.md) |
+| **1 · MT4Account** | `src/mt4/account.rs` | Low-level gRPC: builds each proto `…Request`, attaches auth metadata, unwraps replies to `Result<…Data, MT4Error>`; connection & streaming. Everything builds on it. | [MT4Account overview](../MT4Account/MT4Account.Master.Overview.md) |
+
+```text
+Your code → MT4Sugar → MT4Service → MT4Account → gRPC → MetaRPC gateway → MT4 terminal
 ```
-YOUR CODE (User-facing)
-  ├─ Orchestrators (strategy implementations)
-  ├─ Presets (multi-strategy combinations)
-  └─ Examples (learning materials)
-                  │
-                  │ uses
-                  ↓
-MT4Sugar (Layer 3 - Convenience)
-  ├─ Auto-normalization (lots, slippage)
-  ├─ Risk management (LotSizeFromRisk)
-  ├─ Order helper methods (BuyByPips, etc.)
-  └─ Batch operations (CloseAllOrders, DeletePending)
-                  │
-                  │ uses
-                  ↓
-MT4Service (Layer 2 - Wrappers)
-  ├─ Direct data returns
-  ├─ Type conversions (proto → native primitives)
-  └─ Simplified signatures (no raw proto required)
-                  │
-                  │ uses
-                  ↓
-MT4Account (Layer 1 - Low-level)
-  ├─ Proto Request/Response handling
-  ├─ gRPC communication & channel management
-  ├─ Auto-reconnection on transient faults
-  └─ Real-time streaming subscriptions
-                  │
-                  │ gRPC
-                  ↓
-MT4 Gateway (mt4term) or MT4 Terminal
-  └─ MetaTrader 4 with gRPC server
-```
+
+Mix freely: `sugar.service()` borrows the Service, `service.account()` borrows the Account.
 
 ---
 
-## 🔍 Layer Breakdown
+## 🌳 Repository tree
 
-### Layer 1: `MT4Account` (Low-Level gRPC)
-- Direct gRPC stubs communicating with the terminal.
-- Handles protobuf message serialization/deserialization.
-- Responsible for connection recovery, channel state monitoring, and raw streaming calls.
-- Ideal when you need complete control over protobuf payload fields.
-
-### Layer 2: `MT4Service` (Wrappers)
-- Translates protobuf messages into native Rust primitives and data models.
-- Removes boilerplate request/response wrapper instantiation.
-- Simplifies method signatures for common terminal actions (Orders, Tickets, and History).
-
-### Layer 3: `MT4Sugar` (Convenience Layer)
-- Automates lot size calculation and margin checks based on risk percentages.
-- Automatically normalizes prices and volumes to broker specifications (step size, digits, minimum lot).
-- Provides one-line batch operations: close all profitable positions, cancel pending orders.
-- Point-offset helpers (`BuyLimitPoints`, `SellStopPoints`).
+- **`RustMT4/`** — crate root (`metarpc-mt4`)
+  - **`src/`** — the library
+    - `lib.rs` — crate root; re-exports `MT4Account` / `MT4Service` / `MT4Sugar` / `Settings` / `MT4Error`, the DTOs, and the `strategies` module
+    - `pb.rs` — `include!`s the vendored stubs as `mt4_term_api`
+    - `config.rs` — the `Settings` loader (`settings.json` + env overlay)
+    - `error.rs` — the `MT4Error` enum + `From` impls → [Return Codes](RETURN_CODES_REFERENCE.md)
+    - `models.rs` — plain DTOs reused by Sugar (`Quote`, `Bar`, `OrderRequest`, `OrderResult`, `CloseResult`, `AccountInfo`, `OrderType`) → [Glossary](GLOSSARY.md)
+    - **`mt4/`** — the three SDK layers
+      - `account.rs` — **Layer 1** source → [MT4Account overview](../MT4Account/MT4Account.Master.Overview.md)
+      - `service.rs` — **Layer 2** source → [MT4Service overview](../MT4Service/MT4Service.Overview.md)
+      - `sugar.rs` — **Layer 3** source → [MT4Sugar overview](../MT4Sugar/MT4Sugar.Master.Overview.md)
+      - `mod.rs` — `pub mod account; service; sugar;`
+    - **`strategies/`** — orchestrators + presets → [Strategies overview](../Strategies/Strategies.Master.Overview.md)
+      - `mod.rs` — `StrategyPreset`, `RiskPreset`, `size_lot`, `manage`, presets catalog
+      - `market_one_shot.rs` · `bracket_trailing.rs` · `pending_bracket.rs`
+  - **`package/`** — the raw gRPC contract
+    - `mt4_term_api.rs` — vendored prost/tonic generated stubs (no `build.rs`)
+  - **`examples/`** — runnable demos (`cargo run --example …`), numbered by layer
+    - `quickstart.rs` — the 10-minute path · `menu.rs` — interactive launcher
+    - `0_common/` — `settings.json` loaded by the examples
+    - **`1_lowlevel/`** → [MT4Account overview](../MT4Account/MT4Account.Master.Overview.md)
+    - **`2_service/`** → [MT4Service overview](../MT4Service/MT4Service.Overview.md)
+    - **`3_sugar/`** → [MT4Sugar overview](../MT4Sugar/MT4Sugar.Master.Overview.md)
+    - **`4_strategies/`** → [Strategies overview](../Strategies/Strategies.Master.Overview.md)
+  - **`tests/`** — offline unit tests (construction, DTO mapping, no network)
+  - `Cargo.toml` — crate manifest · `mkdocs.yml` — docs site config
 
 ---
 
-## 🎯 Which Layer Should You Use?
+## 📚 Documentation tree
 
-- **90% of trading applications**: Start with **`MT4Sugar`**. It protects you from off-quote rejections and invalid volume errors.
-- **Custom algorithmic execution**: Use **`MT4Service`** when you manage your own volume normalization logic.
-- **Protocol engineering**: Drop to **`MT4Account`** when you need raw protobuf structures.
+- **`docs/`**
+  - [Home](../index.md) — landing page
+  - **`All_Guides/`** — the guides ([Getting Started](GETTING_STARTED.md), [Your First Project](Your_First_Project.md), [MT4 for Beginners](MT4_For_Beginners.md), [Glossary](GLOSSARY.md), [Async Model](SYNC_VS_ASYNC.md), [gRPC Streaming](GRPC_STREAM_MANAGEMENT.md), [ENUMs](ENUMS_USAGE_REFERENCE.md), [Return Codes](RETURN_CODES_REFERENCE.md))
+  - **`MT4Account/`** — low-level gRPC docs → [overview](../MT4Account/MT4Account.Master.Overview.md) *(per-method pages inside)*
+  - **`MT4Service/`** — typed facade docs → [overview](../MT4Service/MT4Service.Overview.md) *(per-group pages inside)*
+  - **`MT4Sugar/`** — convenience API docs → [overview](../MT4Sugar/MT4Sugar.Master.Overview.md) *(per-group pages inside)*
+  - **`Strategies/`** — orchestrators + presets → [overview](../Strategies/Strategies.Master.Overview.md) *(per-strategy pages inside)*
+  - `styles/` · `javascripts/` · `includes/` · `Guide_Images/` — assets & theme
+
+> The `MT4Account/`, `MT4Service/`, `MT4Sugar/` and `Strategies/` folders hold per-method / per-group pages. By design this map links only their **overviews** — each overview is the index into its own detail pages.
+
+---
+
+## 🎯 Which layer should you use?
+
+- **Most trading apps → [MT4Sugar](../MT4Sugar/MT4Sugar.Master.Overview.md).** Risk sizing, pip math and bulk ops out of the box.
+- **Custom execution → [MT4Service](../MT4Service/MT4Service.Overview.md).** Typed calls when you manage your own request shapes.
+- **Protocol-level control → [MT4Account](../MT4Account/MT4Account.Master.Overview.md).** Raw proto structures and streams.

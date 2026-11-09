@@ -77,23 +77,24 @@ nav:
   - Home: index.md
 
   - Guides:
-    - Getting Started: All_Guides/GETTING_STARTED.md
-    - Your First Project: All_Guides/Your_First_Project.md
-    - Project Map: All_Guides/PROJECT_MAP.md
-    - Glossary: All_Guides/GLOSSARY.md
-    - MT4 for Beginners: All_Guides/MT4_For_Beginners.md
-    - gRPC Streaming: All_Guides/GRPC_STREAM_MANAGEMENT.md
-    - Return Codes: All_Guides/RETURN_CODES_REFERENCE.md
-    - ENUMs Reference: All_Guides/ENUMS_USAGE_REFERENCE.md
-    - Protobuf Inspector: All_Guides/PROTOBUF_INSPECTOR_GUIDE.md
-    - UserCode Sandbox: All_Guides/USERCODE_SANDBOX_GUIDE.md
-    - Sync vs Async: All_Guides/SYNC_VS_ASYNC.md
+      - Getting Started: All_Guides/GETTING_STARTED.md
+      - Your First Project: All_Guides/Your_First_Project.md
+      - MT4 for Beginners: All_Guides/MT4_For_Beginners.md
+      - Project Map: All_Guides/PROJECT_MAP.md
+      - Glossary: All_Guides/GLOSSARY.md
+      - gRPC Streaming: All_Guides/GRPC_STREAM_MANAGEMENT.md
+      - Return Codes: All_Guides/RETURN_CODES_REFERENCE.md
+      - ENUMs Reference: All_Guides/ENUMS_USAGE_REFERENCE.md
+      - Async Model: All_Guides/SYNC_VS_ASYNC.md
 
   - API Reference:
-    - MT4Account API: API_Reference/MT4Account.md
-    - MT4Service API: API_Reference/MT4Service.md
-    - MT4Sugar API: API_Reference/MT4Sugar.md
+      - MT4Account API: MT4Account/MT4Account.Master.Overview.md
+      - MT4Service API: MT4Service/MT4Service.Overview.md
+      - MT4Sugar API: MT4Sugar/MT4Sugar.Master.Overview.md
 
   - Strategies:
-    - Master Overview: Strategies/Strategies.Master.Overview.md
-    - Presets: Strategies/Presets/AdaptiveMarketModePreset.md
+      - Master Overview: Strategies/Strategies.Master.Overview.md
+      - Presets: Strategies/Presets.md
+      - Market One-Shot: Strategies/market_one_shot.md
+      - Bracket + Trailing: Strategies/bracket_trailing.md
+      - Pending Bracket: Strategies/pending_bracket.md

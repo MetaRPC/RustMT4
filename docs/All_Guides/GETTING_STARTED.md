@@ -1,72 +1,88 @@
 # Getting Started with RustMT4
 
-> **Quick Setup & Overview** - Start automating your trading with RustMT4 (Rust for MetaTrader 4) in minutes.
+> **Quick setup & overview** — start automating MetaTrader 4 with RustMT4 (Rust + gRPC) in minutes.
 
 ---
 
 ## 🎯 What is RustMT4?
 
-**RustMT4** is an industrial-grade, type-safe Rust client library for interacting with **MetaTrader 4** terminals via high-performance **gRPC**. It eliminates complex C++ DLL wrappers and provides direct, reliable programmatic trading.
+**RustMT4** is a type-safe Rust client for **MetaTrader 4** terminals over **gRPC**. No C++ DLL wrappers — direct, async, reliable programmatic trading.
 
-### 🌟 Key Advantages
-- 🚀 **High Throughput**: Native gRPC streaming for sub-millisecond price ticks and trade execution.
-- 🛡️ **Three-Layer Architecture**: Low-level gRPC (`MT4Account`), typed wrapper methods (`MT4Service`), and high-level convenience (`MT4Sugar`).
-- 🔄 **Resilient Connection**: Auto-reconnect, exponential backoff, and transparent channel healing.
-- 💼 **Production Ready**: Fully verified across institutional accounts, hedge fund systems, and automated retail bots.
+### Three-layer architecture
+
+| Layer | Type | What you get |
+|-------|------|--------------|
+| **[MT4Account](../MT4Account/MT4Account.Master.Overview.md)** | low | Raw gRPC — build `…Request`, get `…Data`. Full control. |
+| **[MT4Service](../MT4Service/MT4Service.Overview.md)** | mid | Friendly args (`&str` symbols, typed enums), clean returns. |
+| **[MT4Sugar](../MT4Sugar/MT4Sugar.Master.Overview.md)** | high | One-liners: buy/sell by side, pip math, risk sizing, trailing, watchers. |
+
+Each layer wraps the one below, so you can drop down a level any time you need more control.
 
 ---
 
 ## 📦 Installation
 
-RustMT4 is not published on a package registry; get it from the repository:
+Not published on crates.io yet — clone the repo:
 
 ```bash
 git clone https://github.com/MetaRPC/RustMT4.git
+cd RustMT4
+```
+
+Build (requires the WinLibs GNU toolchain on Windows):
+
+```bash
+cargo build
 ```
 
 ---
 
-## 🔑 API Key & Authentication
+## 🔑 API key & authentication
 
-Connecting to MetaRPC production endpoints (`mt4.mrpc.pro:443`) requires an API key:
+Connecting to the MetaRPC endpoint (`mt4.mrpc.pro:443`) needs an API key:
 
-1. **Sign Up**: Create an account for free at [https://mrpc.pro/signup](https://mrpc.pro/signup).
-2. **Generate API Key**: In your MetaRPC Portal dashboard at [https://mrpc.pro/my](https://mrpc.pro/my), go to **API Keys** to generate and copy your personal API token.
-3. **Configure Connection**: Pass your API key / token along with the server address (`mt4.mrpc.pro:443`) in your connection settings.
+1. **Sign up** (free): [https://mrpc.pro/signup](https://mrpc.pro/signup).
+2. **Generate a key** in your dashboard: [https://mrpc.pro/my](https://mrpc.pro/my) → **API Keys**.
+3. **Provide it** via the `MRPC_API_KEY` environment variable (or `api_key` in `settings.json`). The SDK sends it on every call.
+
+> The terminal **session id** is handled for you: `Connect` returns a GUID, and the SDK attaches it to all later requests and streams automatically — no `GetId` call needed.
 
 ---
 
+## 🔌 Minimal connection example
 
----
+Compose the three layers (here, the top one) and read your balance:
 
-## 🆔 Automatic Account ID & Authentication
+```rust
+use metarpc_mt4::{MT4Account, MT4Service, MT4Sugar};
 
-MetaRPC endpoints require authentication and session management:
-1. **`APIKey`**: Your personal authentication token from [https://mrpc.pro/my](https://mrpc.pro/my) (obtained by registering at [https://mrpc.pro/signup](https://mrpc.pro/signup)). Sent in the `APIKey` header.
-2. **`id`**: A terminal session GUID returned by `Connect` / `ConnectEx` (`terminalInstanceGuid`).
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // host + port only; MRPC_API_KEY is read from the environment.
+    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new("mt4.mrpc.pro", 443)));
 
-> 💡 **Seamless Automation**: You do not need to call `GetId` or provide an `id` header when connecting. The server automatically generates a session GUID upon connection and returns it to the caller. The SDK automatically captures this session ID and attaches it alongside your `APIKey` to all subsequent requests and streaming subscriptions.
+    // login, password, broker server name, optional terminal label, connect timeout (s)
+    sugar.connect_by_server_name(12_345_678, "password", "FreshForex-Demo", None, 120).await?;
 
-## 🔌 Minimal Connection Example
+    let a = sugar.get_account_info().await?;
+    println!("Balance: {:.2} {}  Equity: {:.2}", a.balance, a.currency, a.equity);
 
-Here is how easy it is to initialize `MT4Account`, connect to your MetaTrader terminal, and retrieve your account balance:
-
+    sugar.disconnect(false).await?;
+    Ok(())
+}
 ```
-let mut account = MT4Account::new(user, password, grpc_server);
-account.connect_by_server_name(server_name, "EURUSD", 30).await?;
-let summary = account.account_summary().await?;
-println!("Balance: {}, Equity: {}", summary.account_balance, summary.account_equity);
-```
+
+Prefer the raw layer? `MT4Account::new("mt4.mrpc.pro", 443)` then `account.account_summary().await?` (returns `AccountSummaryData` with `account_balance`, `account_equity`, …).
 
 ---
 
-## 🗺️ Documentation Road Map
+## 🗺️ Documentation road map
 
-To get the most out of RustMT4, follow this suggested reading order:
+1. 🚀 **[Your First Project](Your_First_Project.md)** — a working bot in 10 minutes.
+2. 🗺️ **[Project Map](PROJECT_MAP.md)** — the three layers and how they interact.
+3. 🐣 **[MT4 for Beginners](MT4_For_Beginners.md)** — terminal + demo account setup.
+4. 📖 **[Glossary](GLOSSARY.md)** — MT4 and trading terminology.
+5. 📡 **[gRPC Streaming](GRPC_STREAM_MANAGEMENT.md)** — ticks, trades, profit, connection state.
+6. 🔢 **[ENUMs Reference](ENUMS_USAGE_REFERENCE.md)** · 📊 **[Return Codes](RETURN_CODES_REFERENCE.md)** · ⚙️ **[Async Model](SYNC_VS_ASYNC.md)**
 
-1. 🚀 **[Your First Project](Your_First_Project.md)** - Build and run a working project in 10 minutes.
-2. 🗺️ **[Project Map](PROJECT_MAP.md)** - Understand the 3 architectural layers and interaction flow.
-3. 📖 **[Glossary](GLOSSARY.md)** - Essential MetaTrader 4 and algorithmic trading terminology.
-4. 🐣 **[MT4 for Beginners](MT4_For_Beginners.md)** - Step-by-step terminal setup and demo account guide.
-5. 📡 **[gRPC Streaming](GRPC_STREAM_MANAGEMENT.md)** - Subscribe to ticks, trades, DOM, and position updates.
-6. 📊 **[Return Codes](RETURN_CODES_REFERENCE.md)** - Complete reference of broker and gateway return codes.
+Then the [API Reference](../MT4Account/MT4Account.Master.Overview.md) for every method.
