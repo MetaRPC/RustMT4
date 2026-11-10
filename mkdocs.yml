@@ -86,6 +86,7 @@ nav:
       - Return Codes: All_Guides/RETURN_CODES_REFERENCE.md
       - ENUMs Reference: All_Guides/ENUMS_USAGE_REFERENCE.md
       - Async Model: All_Guides/SYNC_VS_ASYNC.md
+      - Protobuf Inspector: All_Guides/PROTOBUF_INSPECTOR_GUIDE.md
 
   - API Reference:
       - MT4Account API: MT4Account/MT4Account.Master.Overview.md

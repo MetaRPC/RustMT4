@@ -17,6 +17,7 @@ const ITEMS: &[(&str, &str)] = &[
     ("Sugar · trading — risk-sized order with SL/TP", "sugar_trading"),
     ("Sugar · positions & exposure", "sugar_positions"),
     ("Strategies · orchestrators demo", "strategies_demo"),
+    ("Tools · Protobuf Inspector (explore proto types — offline)", "protobuf_inspector"),
 ];
 
 fn main() {
