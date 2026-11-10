@@ -349,32 +349,34 @@ fn make_field(attr: &str, decl: &str) -> Option<Field> {
     let name = after_pub[..colon].trim().to_string();
     let rust_type = after_pub[colon + 1..].trim().trim_end_matches(',').trim();
 
-    // Exact key lookup so `tags = "1, 2"` (oneof) doesn't masquerade as `tag`.
-    let attr_val = |key: &str| -> Option<String> {
-        attr.split(',').find_map(|p| {
-            let mut kv = p.splitn(2, '=');
-            let k = kv.next()?.trim();
-            if k != key {
-                return None;
-            }
-            Some(kv.next()?.trim().trim_matches('"').to_string())
-        })
+    // Capture the quoted span that follows a key, e.g. `enumeration = "Foo"` → `Foo`,
+    // `map = "string, string"` → `string, string` (handles commas inside the quotes).
+    let quoted = |key: &str| -> Option<String> {
+        let i = attr.find(key)?;
+        let rest = &attr[i + key.len()..];
+        let q1 = rest.find('"')?;
+        let q2 = rest[q1 + 1..].find('"')?;
+        Some(rest[q1 + 1..q1 + 1 + q2].to_string())
     };
 
-    let tag = attr_val("tag").and_then(|v| v.parse::<i32>().ok()).unwrap_or(0);
+    // The tag is a bare `tag = "N"` — match the exact key so `tags = "1, 2"` can't impersonate it.
+    let tag = attr
+        .split(',')
+        .find_map(|p| {
+            let mut kv = p.splitn(2, '=');
+            if kv.next()?.trim() != "tag" {
+                return None;
+            }
+            kv.next()?.trim().trim_matches('"').parse::<i32>().ok()
+        })
+        .unwrap_or(0);
 
     let kind = attr.split([',', '=']).next().unwrap_or("").trim();
 
     // A oneof is a synthetic field over several tags; show the oneof type and its tag list.
     if kind == "oneof" {
-        let ref_name = attr_val("oneof").map(|v| leaf_type(&v)).unwrap_or_else(|| "?".into());
-        // `tags = "1, 2"` holds a comma inside the quotes, so read the quoted span directly.
-        let tags = attr.find("tags").and_then(|i| {
-            let rest = &attr[i..];
-            let q1 = rest.find('"')?;
-            let q2 = rest[q1 + 1..].find('"')?;
-            Some(rest[q1 + 1..q1 + 1 + q2].to_string())
-        }).unwrap_or_default();
+        let ref_name = quoted("oneof").map(|v| leaf_type(&v)).unwrap_or_else(|| "?".into());
+        let tags = quoted("tags").unwrap_or_default();
         let label = if tags.is_empty() {
             format!("oneof {ref_name}")
         } else {
@@ -387,18 +389,10 @@ fn make_field(attr: &str, decl: &str) -> Option<Field> {
 
     let base = match kind {
         "message" | "group" => leaf_type(rust_type),
-        "enumeration" => attr
-            .split('=')
-            .nth(1)
-            .map(|r| r.trim().trim_matches('"').to_string())
-            .unwrap_or_else(|| "enum".to_string()),
+        "enumeration" => quoted("enumeration").unwrap_or_else(|| "enum".to_string()),
         "map" => {
             // attr like: map = "string, string"
-            let inner = attr
-                .split('=')
-                .nth(1)
-                .map(|r| r.trim().trim_matches('"').to_string())
-                .unwrap_or_default();
+            let inner = quoted("map").unwrap_or_default();
             format!("map<{inner}>")
         }
         "bytes" => "bytes".to_string(),
