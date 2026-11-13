@@ -49,7 +49,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //   shared defaults (magic 777, 20-pip deviation, "quickstart" comment).
     // ──────────────────────────────────────────────────────────────
     let cfg = Settings::load()?;
-    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new("mt4.mrpc.pro", 443)))
+    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new(cfg.host.clone(), cfg.port)))
         .set_defaults(777, 20, "quickstart");
 
     // ──────────────────────────────────────────────────────────────

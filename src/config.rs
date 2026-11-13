@@ -3,8 +3,10 @@
 //! [`Settings::load`] reads a `settings.json` (if present) then overlays environment variables
 //! (env wins). File path resolution: `MRPC_SETTINGS`, else `examples/0_common/settings.json`,
 //! else `settings.json`. Env overlay: `MT4_LOGIN`, `MT4_PASSWORD`, `MT4_SERVER`, `MT4_SYMBOL`,
-//! `MT4_NAME`, `MRPC_API_KEY`. If `api_key` is set and `MRPC_API_KEY` is not already in the
-//! environment, it is exported so [`crate::MT4Account::new`] picks it up.
+//! `MT4_NAME`, `MT4_HOST`, `MT4_PORT`, `MRPC_API_KEY`. The gRPC gateway is `host`:`port`
+//! (default `mt4.mrpc.pro:443`; use `mt4-stg.mrpc.pro` for staging). If `api_key` is set and
+//! `MRPC_API_KEY` is not already in the environment, it is exported so
+//! [`crate::MT4Account::new`] picks it up.
 
 use std::path::{Path, PathBuf};
 
@@ -32,10 +34,24 @@ pub struct Settings {
     /// A default symbol for the examples (e.g. `"EURUSD"`).
     #[serde(default = "default_symbol")]
     pub test_symbol: String,
+    /// gRPC gateway host (default `"mt4.mrpc.pro"`; use `"mt4-stg.mrpc.pro"` for staging).
+    #[serde(default = "default_host")]
+    pub host: String,
+    /// gRPC gateway port (default `443`).
+    #[serde(default = "default_port")]
+    pub port: u16,
 }
 
 fn default_symbol() -> String {
     "EURUSD".to_string()
+}
+
+fn default_host() -> String {
+    "mt4.mrpc.pro".to_string()
+}
+
+fn default_port() -> u16 {
+    443
 }
 
 impl Settings {
@@ -87,6 +103,13 @@ impl Settings {
         }
         if let Ok(x) = std::env::var("MT4_NAME") {
             obj.insert("name".to_string(), serde_json::json!(x));
+        }
+        if let Ok(x) = std::env::var("MT4_HOST") {
+            obj.insert("host".to_string(), serde_json::json!(x));
+        }
+        if let Ok(x) = std::env::var("MT4_PORT") {
+            let n: u16 = x.parse().map_err(|_| MT4Error::Protocol("MT4_PORT must be a number".to_string()))?;
+            obj.insert("port".to_string(), serde_json::json!(n));
         }
         if let Ok(x) = std::env::var("MRPC_API_KEY") {
             obj.insert("api_key".to_string(), serde_json::json!(x));

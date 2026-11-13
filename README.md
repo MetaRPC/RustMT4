@@ -40,7 +40,7 @@ cd RustMT4
 # arguments: <login> <password> <server name> [api_key]
 cargo run --example quickstart -- 1234567 password FreshForex-Demo your_api_key_here
 
-# or via the environment (MRPC_API_KEY, MT4_LOGIN, MT4_PASSWORD, MT4_SERVER):
+# or via the environment (MRPC_API_KEY, MT4_LOGIN, MT4_PASSWORD, MT4_SERVER, MT4_HOST, MT4_PORT):
 export MRPC_API_KEY="your_api_key_here"        # Windows PowerShell: $env:MRPC_API_KEY="your_api_key_here"
 cargo run --example quickstart
 ```
@@ -96,7 +96,12 @@ MetaRPC endpoints route calls using a terminal session identifier (`id`):
 | Environment | Host | Port | Protocol |
 | :--- | :--- | :--- | :--- |
 | **Production** | `mt4.mrpc.pro` | `443` | TLS / gRPC |
+| **Staging** | `mt4-stg.mrpc.pro` | `443` | TLS / gRPC |
 | **Direct API UI (Swagger)** | `https://mt4.mrpc.pro/apiui` | `443` | HTTPS |
+
+The examples read the gateway from `host` / `port` in `examples/0_common/settings.json`
+(or the `MT4_HOST` / `MT4_PORT` env vars); it defaults to `mt4.mrpc.pro:443`. Point it at
+`mt4-stg.mrpc.pro` to use a staging API key.
 | **Portal Dashboard** | `https://mrpc.pro/my` | `443` | HTTPS |
 | **Registration / API Key** | `https://mrpc.pro/signup` | `443` | HTTPS |
 

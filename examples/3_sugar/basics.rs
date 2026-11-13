@@ -47,7 +47,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // CONNECT
     // ══════════════════════════════════════════════════════════════
     let cfg = Settings::load()?;
-    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new("mt4.mrpc.pro", 443)));
+    let sugar = MT4Sugar::new(MT4Service::new(MT4Account::new(cfg.host.clone(), cfg.port)));
     sugar.connect_by_server_name(cfg.user, &cfg.password, &cfg.server_name, cfg.name.as_deref(), 120).await?;
     let sym = cfg.test_symbol.as_str();
     // endregion: CONNECT

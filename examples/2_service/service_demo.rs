@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //   via the broker server name.
     // ══════════════════════════════════════════════════════════════
     let cfg = Settings::load()?;
-    let svc = MT4Service::new(MT4Account::new("mt4.mrpc.pro", 443));
+    let svc = MT4Service::new(MT4Account::new(cfg.host.clone(), cfg.port));
     svc.connect_by_server_name(cfg.user, &cfg.password, &cfg.server_name, cfg.name.as_deref(), 120).await?;
     let sym = cfg.test_symbol.as_str();
     let now = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs() as i64;

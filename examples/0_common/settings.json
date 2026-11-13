@@ -1,9 +1,11 @@
 {
-  "_comment": "Template connection settings. Fill in your demo credentials, or override with env vars (MT4_LOGIN, MT4_PASSWORD, MT4_SERVER, MT4_SYMBOL, MT4_NAME, MRPC_API_KEY). Do not commit real credentials.",
+  "_comment": "Template connection settings. Fill in your demo credentials, or override with env vars (MT4_LOGIN, MT4_PASSWORD, MT4_SERVER, MT4_SYMBOL, MT4_NAME, MT4_HOST, MT4_PORT, MRPC_API_KEY). The gRPC gateway is host:port (default mt4.mrpc.pro:443; use mt4-stg.mrpc.pro for staging). Do not commit real credentials.",
   "user": 0,
   "password": "YOUR_PASSWORD",
   "server_name": "FreshForex-Demo",
   "name": "rustmt4-examples",
+  "host": "mt4.mrpc.pro",
+  "port": 443,
   "api_key": null,
   "test_symbol": "EURUSD"
 }

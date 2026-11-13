@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //   the test symbol to Market Watch so it streams prices.
     // ══════════════════════════════════════════════════════════════
     let cfg = Settings::load()?;
-    let acc = MT4Account::new("mt4.mrpc.pro", 443);
+    let acc = MT4Account::new(cfg.host.clone(), cfg.port);
     acc.connect_by_server_name(cfg.user, &cfg.password, &cfg.server_name, cfg.name.as_deref(), 120).await?;
     acc.symbol_select(pb::SymbolSelectRequest { symbol: cfg.test_symbol.clone(), select: true }).await?;
     // endregion: CONNECT
