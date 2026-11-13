@@ -2,254 +2,254 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://metarpc.github.io/RustMT4/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/ENUMS_USAGE_REFERENCE/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GETTING_STARTED/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GLOSSARY/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/GRPC_STREAM_MANAGEMENT/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/MT4_For_Beginners/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/PROJECT_MAP/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/PROTOBUF_INSPECTOR_GUIDE/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/RETURN_CODES_REFERENCE/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/SYNC_VS_ASYNC/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/All_Guides/Your_First_Project/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/MT4Account.Master.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/Account_Information.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/account_summary/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/equity_history/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/trade_stats/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/trade_stats_equity_history/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/1.%20Account_Information/trade_unrealized_pl/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/2.%20Orders_History/Orders_History.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/2.%20Orders_History/opened_orders/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/2.%20Orders_History/opened_orders_tickets/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/2.%20Orders_History/orders_history/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/Symbols_Quotes.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/quote/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/quote_history/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/quote_many/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/server_timezone/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/symbol_params_many/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/symbol_select/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/symbols/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/3.%20Symbols_Quotes/tick_value_with_size/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/4.%20Trading_Operations/Trading_Operations.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/4.%20Trading_Operations/order_close_by/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/4.%20Trading_Operations/order_close_delete/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/4.%20Trading_Operations/order_modify/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/4.%20Trading_Operations/order_send/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/Streaming_Methods.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/on_connect_state/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/on_opened_orders_profit/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/on_opened_orders_tickets/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/on_symbol_tick/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Account/5.%20Streaming_Methods/on_trade/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/1.%20Account_Information/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/2.%20Orders_History/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/3.%20Symbols_Quotes/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/4.%20Trading_Operations/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/5.%20Streaming_Methods/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Service/MT4Service.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/1.%20Connection_Defaults/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/2.%20Prices_Quotes/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/3.%20Symbol_Math/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/4.%20Risk_Sizing/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/5.%20Order_Entry/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/6.%20Order_Management/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/7.%20Trailing_Breakeven/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/8.%20Watchers_Waiters/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/9.%20Order_Info/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/MT4Sugar/MT4Sugar.Master.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Presets/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/Strategies.Master.Overview/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/bracket_trailing/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/market_one_shot/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
     <url>
          <loc>https://metarpc.github.io/RustMT4/Strategies/pending_bracket/</loc>
-         <lastmod>2026-11-10</lastmod>
+         <lastmod>2026-11-13</lastmod>
     </url>
 </urlset>
