@@ -164,7 +164,8 @@ impl MT4Account {
     }
 
     /// Run `op`, retrying transient transport errors with back-off and re-`ConnectEx`-ing once per
-    /// attempt on `TERMINAL_INSTANCE_NOT_FOUND`. An invalid login is never retried.
+    /// attempt on `TERMINAL_INSTANCE_NOT_FOUND`. An invalid login or a refused API key is never
+    /// retried. For reads only — trade calls go through [`call_trade`](Self::call_trade).
     async fn call<T>(&self, op: impl AsyncFn() -> Result<T, MT4Error>) -> Result<T, MT4Error> {
         let mut attempt: u32 = 0;
         loop {
@@ -177,9 +178,41 @@ impl MT4Account {
                     }
                     if e.is_terminal_not_found() {
                         if let Err(re) = self.reconnect().await {
-                            if matches!(re, MT4Error::InvalidLogin(_)) {
+                            if matches!(re, MT4Error::InvalidLogin(_)) || re.is_api_key_refused() {
                                 return Err(re);
                             }
+                        }
+                    }
+                    let backoff = Duration::from_millis(500 * (1u64 << attempt.min(5)));
+                    tokio::time::sleep(backoff).await;
+                }
+            }
+        }
+    }
+
+    /// Run a trade call. A transport failure after which the request may already have been
+    /// executed (`Unavailable`, `DeadlineExceeded`, `Unknown`, `Internal`) is **never re-sent**: it
+    /// is returned once as [`MT4Error::TradeOutcomeUnknown`]. Only an in-band
+    /// `TERMINAL_INSTANCE_NOT_FOUND` / `TERMINAL_REGISTRY_TERMINAL_NOT_FOUND` answer (the gateway
+    /// answered before any terminal saw the request) is re-sent after a reconnect.
+    async fn call_trade<T>(
+        &self,
+        operation: &str,
+        op: impl AsyncFn() -> Result<T, MT4Error>,
+    ) -> Result<T, MT4Error> {
+        let mut attempt: u32 = 0;
+        loop {
+            match op().await {
+                Ok(v) => return Ok(v),
+                Err(e) => {
+                    let e = e.into_trade_outcome(operation);
+                    attempt += 1;
+                    if attempt > self.max_retries || !e.is_terminal_not_found() {
+                        return Err(e);
+                    }
+                    if let Err(re) = self.reconnect().await {
+                        if matches!(re, MT4Error::InvalidLogin(_)) || re.is_api_key_refused() {
+                            return Err(re);
                         }
                     }
                     let backoff = Duration::from_millis(500 * (1u64 << attempt.min(5)));
@@ -443,18 +476,27 @@ impl MT4Account {
 
     // ===== 4. Trading operations =====
 
+    // Trade calls are never re-sent after a transport failure (see `call_trade`): such a failure
+    // comes back as `MT4Error::TradeOutcomeUnknown`.
+
     /// `TradingHelper/OrderSend` — open a market/pending order.
     pub async fn order_send(&self, request: pb::OrderSendRequest) -> Result<pb::OrderSendData, MT4Error> {
-        let mut c = TradingHelperClient::new(self.channel()?);
-        let r = c.order_send(self.req(request)?).await?;
-        unwrap_reply!(r, order_send_reply)
+        self.call_trade("OrderSend", async || {
+            let mut c = TradingHelperClient::new(self.channel()?);
+            let r = c.order_send(self.req(request.clone())?).await?;
+            unwrap_reply!(r, order_send_reply)
+        })
+        .await
     }
 
     /// `TradingHelper/OrderModify` — change SL/TP (open order) or price/SL/TP/expiration (pending).
     pub async fn order_modify(&self, request: pb::OrderModifyRequest) -> Result<pb::OrderModifyData, MT4Error> {
-        let mut c = TradingHelperClient::new(self.channel()?);
-        let r = c.order_modify(self.req(request)?).await?;
-        unwrap_reply!(r, order_modify_reply)
+        self.call_trade("OrderModify", async || {
+            let mut c = TradingHelperClient::new(self.channel()?);
+            let r = c.order_modify(self.req(request.clone())?).await?;
+            unwrap_reply!(r, order_modify_reply)
+        })
+        .await
     }
 
     /// `TradingHelper/OrderCloseDelete` — close a market order or delete a pending one.
@@ -462,16 +504,22 @@ impl MT4Account {
         &self,
         request: pb::OrderCloseDeleteRequest,
     ) -> Result<pb::OrderCloseDeleteData, MT4Error> {
-        let mut c = TradingHelperClient::new(self.channel()?);
-        let r = c.order_close_delete(self.req(request)?).await?;
-        unwrap_reply!(r, order_close_delete_reply)
+        self.call_trade("OrderCloseDelete", async || {
+            let mut c = TradingHelperClient::new(self.channel()?);
+            let r = c.order_close_delete(self.req(request.clone())?).await?;
+            unwrap_reply!(r, order_close_delete_reply)
+        })
+        .await
     }
 
     /// `TradingHelper/OrderCloseBy` — close an order by an opposite one.
     pub async fn order_close_by(&self, request: pb::OrderCloseByRequest) -> Result<pb::OrderCloseByData, MT4Error> {
-        let mut c = TradingHelperClient::new(self.channel()?);
-        let r = c.order_close_by(self.req(request)?).await?;
-        unwrap_reply!(r, order_close_by_reply)
+        self.call_trade("OrderCloseBy", async || {
+            let mut c = TradingHelperClient::new(self.channel()?);
+            let r = c.order_close_by(self.req(request.clone())?).await?;
+            unwrap_reply!(r, order_close_by_reply)
+        })
+        .await
     }
 
     // ===== 5. Streaming =====
@@ -523,3 +571,7 @@ impl MT4Account {
         Ok(r.into_inner())
     }
 }
+
+#[cfg(test)]
+#[path = "account_no_replay_tests.rs"]
+mod no_replay_tests;
