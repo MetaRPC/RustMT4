@@ -59,7 +59,7 @@ message SymbolParamsManyData { repeated SymbolParamsManyInfo symbol_infos = 1; }
 | `currency_base` / `currency_profit` / `currency_margin` | `String` | The three symbol currencies |
 | `sym_description` / `path` | `String` | Human label and Market-Watch tree path |
 
-> The record has ~60 fields (session stats, margin rates, ISIN, timestamps). The table lists the ones used in day-to-day automation.
+> The record has 67 fields (session stats, margin rates, ISIN, timestamps). The table lists the ones used in day-to-day automation.
 
 ---
 
